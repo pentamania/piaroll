@@ -1,5 +1,6 @@
 export const TRACK_DEFAULT_HEIGHT = 40;
 export const NOTE_WIDTH = 8;
+export const NOTE_ID_KEY = "__piano_uid__";
 export const CHART_PADDING = {
   left: 30,
   top: 30,

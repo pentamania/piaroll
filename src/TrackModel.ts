@@ -1,3 +1,5 @@
+import { NOTE_ID_KEY } from "./config";
+
 export class TrackModel {
   private _listeners;
   private _data;
@@ -6,6 +8,8 @@ export class TrackModel {
   constructor(data) {
     this._listeners = [];
     this._data = data;
+
+    /* add accessor */
     Object.keys(data).forEach((key)=> {
       Object.defineProperty(this, key, {
         get() { return data[key]; },
@@ -16,9 +20,17 @@ export class TrackModel {
         enumerable: true,
         configurable: true
       })
+      // add id to each note
       if (key === 'notes') {
         data[key].forEach(note => {
-          note._uid = this._serialId++;
+          // note[NOTE_ID_KEY] = this._serialId++;
+          Object.defineProperty(note, NOTE_ID_KEY, {
+            value: this._serialId++,
+            writable: false,
+            enumerable: true, // getDataでクローンを渡す際に必要
+            configurable: false
+          })
+
         });
       }
     });
@@ -27,44 +39,48 @@ export class TrackModel {
 
   $set(target, indexOrKey, val) {
     target[indexOrKey] = val;
-    // console.log(this._data);
     this.dispatchChange();
   }
 
   getData():object { return JSON.parse(JSON.stringify(this._data)); }
 
   addNote(props) {
-    props._uid = this._serialId++;
+    props[NOTE_ID_KEY] = this._serialId++;
     this._data.notes.push(props);
     this.dispatchChange();
   }
-  // removeNote(index) {
-  //   this._data.notes.splice(index, 1);
-  //   console.log(this._data.notes);
-
-  //   this.dispatchChange();
-  // }
-  // removeNotes(noteIndices) {
-  //   noteIndices.forEach(index => {
-  //     this._data.notes[index] = null;
-  //   });
-  //   this._data.notes = this._data.notes.filter((note)=> {
-  //     return (note != null)
-  //   })
-  //   this.dispatchChange();
-  // }
 
   removeNoteById(id) {
-    this._data.notes = this._data.notes.filter((note) => {
-      return (note._uid != id)
-    })
+    if (id.length) {
+      id.forEach(_id => {
+        this._data.notes = this._data.notes.filter((note) => {
+          return (note[NOTE_ID_KEY] != _id)
+        })
+      });
+    } else {
+      this._data.notes = this._data.notes.filter((note) => {
+        return (note[NOTE_ID_KEY] != id)
+      })
+    }
     // console.table(this._data.notes);
     this.dispatchChange();
   }
 
-  setNote(index:number, prop:string, val:any):void {
-    this.$set(this._data.notes[index], prop, val);
-    // this.notes[index][prop] = val;
+  // setNote(index:number, prop:string, val:any):void {
+  //   this.$set(this._data.notes[index], prop, val);
+  //   // this.notes[index][prop] = val;
+  // }
+
+  setNoteById(id: number, prop: string, val: any) {
+    var target = this._data.notes.find((note)=> {
+      return note[NOTE_ID_KEY] === id;
+    });
+    console.log(prop, target);
+
+    if (target) {
+      target[prop] = val;
+      this.dispatchChange();
+    }
   }
 
   setAllNotes(cb) {
@@ -75,6 +91,7 @@ export class TrackModel {
   dispatchChange() {
     this._listeners.forEach(listener => {
       listener();
+      // requestAnimationFrame(listener);
     });
   }
 

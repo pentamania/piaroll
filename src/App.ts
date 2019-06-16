@@ -123,6 +123,12 @@ export class App {
     trackModel.subscribe(function () {
       headerGroup.render(trackModel.getData());
       chart.render(trackModel.getData());
+
+      // rafにすると判定できない
+      // requestAnimationFrame(function() {
+      //   console.log('start');
+      //   chart.render(trackModel.getData());
+      // })
     });
 
     this._trackModels.push(trackModel);

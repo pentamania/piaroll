@@ -112,5 +112,8 @@ export class NoteRect extends EventEmitter {
   addEventListener(...v) {
     this.rectElement.addEventListener(v[0], v[1])
   }
+  removeEventListener(...v) {
+    this.rectElement.removeEventListener(v[0], v[1])
+  }
 
 }
