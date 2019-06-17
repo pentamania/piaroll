@@ -41,12 +41,13 @@ export class TrackChart {
   private _svgNoteLayer: SVGGElement
   private _svgLineLayer: SVGGElement
   private _currentLineRect: SVGRectElement
-  private _barWidth: number = 0
+
+  private _chartWidth: number = 0
+  private _chartHeight: number = 0
   // private _state = cloneObj(defaultState)
   private _state = { notes:[] }
-  private _noteRects = []
+  private _noteRects:NoteRect[] = []
   private _model: TrackModel
-  private _moveStartX: number
   // isWriteMode: boolean = false
   isWriteMode: boolean = true
 
@@ -60,9 +61,9 @@ export class TrackChart {
     chartSvg.style.borderBottom = 'solid 1px gray';
 
     // svg layers
-    this._svgNoteLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    this._svgNoteLayer = document.createElementNS(SVG_NAMESPACE, "g");
     chartSvg.appendChild(this._svgNoteLayer);
-    this._svgLineLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    this._svgLineLayer = document.createElementNS(SVG_NAMESPACE, "g");
     chartSvg.appendChild(this._svgLineLayer);
 
     // current line
@@ -101,26 +102,6 @@ export class TrackChart {
       // todo: brushの設定
     });
 
-    // let moveDeltaX = 0;
-    // document.addEventListener('mousemove', (e) => {
-    //   if (!this._moveStartX) return;
-    //   // console.log("draging");
-    //   moveDeltaX = e.clientX - this._moveStartX;
-    //   // console.log(moveDeltaX);
-    //   this._noteRects.forEach((rect)=> {
-    //     if (rect.selected) {
-    //       rect.x = moveDeltaX
-    //     }
-    //   })
-    // })
-    // document.addEventListener('mouseup', (e) => {
-    //   if (!this._moveStartX) return;
-    //   this._moveStartX = 0;
-    //   this._noteRects.forEach((rect) => {
-    //     // rect.x += moveDeltaX
-    //   })
-    // })
-
     // key event: トラック増やすと厄介？
     document.addEventListener('keydown', (e) => {
       // console.log(e.key)
@@ -140,7 +121,7 @@ export class TrackChart {
         let removedIds = [];
         this._noteRects.forEach((rect) => {
           if (rect.selected) {
-            console.warn('bss remove indx', rect.id);
+            // console.warn('bss remove indx', rect.id);
             removedIds.push(rect.id);
             // this._model.removeNoteById(rect.id); // 即実行だとthis._noteRectsがmutated
           };
@@ -158,7 +139,8 @@ export class TrackChart {
   }
 
   /**
-   * convert
+   * convert methods
+   * TODO: cache calculation result if possible
    */
   tickToX(tick: number):number {
     // console.log("tickToX", tick / this._state.resolution * this._state.barWidth);
@@ -196,8 +178,10 @@ export class TrackChart {
 
     /* note move by drag */
     let moveStartX = 0;
+    let moveStartY = 0;
     const onDragStart = (e) => {
       e.stopPropagation(); // chart自体のイベント発火を止める
+
       if (!noteRect.selected) {
         // shiftキー押しで連続選択できるように
         if (!globalKeyState.shiftKey) {
@@ -208,33 +192,80 @@ export class TrackChart {
         // ノーツ選択状態にする
         this._model.setNoteById(noteParam[NOTE_ID_KEY], "selected", true);
       }
+      // else {
+      //   this._model.setNoteById(noteParam[NOTE_ID_KEY], "selected", false);
+      // }
+
       moveStartX = e.clientX;
+      moveStartY = e.clientY;
+      // 以下だと初期位置が更新されないことがある
+      // if (noteRect.selected) {
+      //   noteRect.tempStartX = noteRect.x;
+      //   noteRect.tempStartY = noteRect.y;
+      // }
       this._noteRects.forEach((nRect) => {
-        if (nRect.selected) nRect.startX = nRect.x;
+        if (nRect.selected) {
+          nRect.tempStartX = nRect.x;
+          nRect.tempStartY = nRect.y;
+        }
       })
     }
     const onDragMove = (e) => {
       if (!moveStartX) return;
       e.stopPropagation();
-      let deltaX = e.clientX - moveStartX;
-      this._noteRects.forEach((nRect) => {
-        if (nRect.selected) {
-          // TODO: 移動を制限
-          // nRect.x = nRect.startX + deltaX;
-          nRect.x = this.snapToDiv(nRect.startX + deltaX);
+
+      // x-axis move
+      const deltaX = e.clientX - moveStartX;
+      const xMovingRects = [];
+      const noteXExceedingRangeExists = this._noteRects.some((nRect, i) => {
+        if (nRect.selected && nRect.tempStartX != null) {
+          const dest = nRect.tempStartX + deltaX;
+          if (dest < 0 || this._chartWidth - nRect.width < dest) return true;
+          xMovingRects.push({
+            index: i,
+            dest: dest,
+          })
         }
-      })
+      });
+      if (!noteXExceedingRangeExists) {
+        xMovingRects.forEach((d)=> {
+          const targetNoteRect = this._noteRects[d.index];
+          targetNoteRect.x = this.snapToDiv(d.dest);
+        });
+      }
+
+      // y-axis move
+      const deltaY = e.clientY - moveStartY;
+      const yMovingRects = [];
+      const noteYExceedingRangeExists = this._noteRects.some((nRect, i) => {
+        if (nRect.selected && nRect.tempStartY != null) {
+          const dest = nRect.tempStartY + deltaY;
+          if (dest < 0 || this._chartHeight - this._state.trackHeight < dest) return true;
+          yMovingRects.push({
+            index: i,
+            dest: dest,
+          })
+        }
+      });
+      if (!noteYExceedingRangeExists) {
+        yMovingRects.forEach((d) => {
+          const targetNoteRect = this._noteRects[d.index];
+          targetNoteRect.y = this.yToTrackId(d.dest) * this._state.trackHeight;
+        });
+      }
     }
     const onDragEnd = (e) => {
       if (!moveStartX) return;
       e.stopPropagation();
-      moveStartX = 0;
-      // 変更通知
+
+      // 変更を通知
       this._noteRects.forEach((nRect) => {
         if (nRect.selected) {
           this._model.setNoteById(nRect.id, "tick", this.xToTick(nRect.x));
+          this._model.setNoteById(nRect.id, "trackId", this.yToTrackId(nRect.y));
         }
       })
+      moveStartX = 0; // reset
     }
     noteRect.addEventListener('mousedown', onDragStart);
     document.addEventListener('mousemove', onDragMove);
@@ -312,7 +343,7 @@ export class TrackChart {
       case "selected":
         noteRect.selected = changedPropValue;
         break;
-      }
+    }
   }
 
   removeNoteRect(noteId) {
@@ -334,6 +365,8 @@ export class TrackChart {
   render(newState) {
     const chartSvg = this._chartSvg
     let bgRedrawFlag = false;
+    let widthChangeFlag = false;
+    let heightChangeFlag = false;
     newState = Object.assign({}, defaultState, newState);
     const paramDiffs = shallowDiff(this._state, newState)
     const noteDiffs = arrayItemSimpleDiff(this._state.notes, newState.notes, NOTE_ID_KEY)
@@ -344,8 +377,9 @@ export class TrackChart {
       const key = diff.key;
       const value = diff.value;
       if (key === "barNum" || key === "barWidth") {
-        bgRedrawFlag = true;
+        widthChangeFlag = true;
         if (key === "barWidth") {
+          bgRedrawFlag = true;
           // noteRect.xの再設定、長さの再設定
           this._noteRects.forEach((noteRect) => {
             noteRect.x = this.tickToX(noteRect.tick);
@@ -353,12 +387,13 @@ export class TrackChart {
               noteRect.width = this.tickToX(noteRect.duration);
             }
           })
-          // currentの位置修正
+          // currentの位置更新
           this._currentLineRect.setAttribute('x', String(this.tickToX(newState.currentTick)));
         }
       } else if (key === "trackNum" || key === "trackHeight") {
-        bgRedrawFlag = true;
+        heightChangeFlag = true;
         if (key === "trackHeight") {
+          bgRedrawFlag = true;
           // noteRectの縦サイズ変更
           this._noteRects.forEach((noteRect) => {
             noteRect.height = newState.trackHeight;
@@ -366,8 +401,11 @@ export class TrackChart {
           })
         }
       } else if (key === "currentTick") {
-        console.log('setting currenttick');
         this._currentLineRect.setAttribute('x', String(this.tickToX(value)));
+      } else if (key === "divNum") {
+        bgRedrawFlag = true;
+      } else if (key === "resolution") {
+        // @TODO: tickToXの計算をcache
       }
     });
 
@@ -387,14 +425,18 @@ export class TrackChart {
       }
     });
 
+    /* update chart */
+    if (widthChangeFlag) {
+      this._chartWidth = newState.barWidth * newState.barNum;
+      chartSvg.setAttribute('width', String(this._chartWidth));
+    }
+    if (heightChangeFlag) {
+      this._chartHeight = newState.trackHeight * newState.trackNum;
+      const chartHeightStr = String(this._chartHeight);
+      chartSvg.setAttribute('height', chartHeightStr);
+      this._currentLineRect.setAttribute('height', chartHeightStr);
+    }
     if (bgRedrawFlag) {
-      // svgリサイズ
-      const chartHeight = String(newState.trackHeight * newState.trackNum);
-      chartSvg.setAttribute('width', String(newState.barWidth * newState.barNum));
-      chartSvg.setAttribute('height', chartHeight);
-      this._currentLineRect.setAttribute('height', chartHeight); // heightが修正されたときのみ
-
-      // 背景を再描画
       setTrackBackground(chartSvg, {
         width: newState.barWidth,
         height: newState.trackHeight,

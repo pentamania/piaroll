@@ -21,6 +21,8 @@ export class NoteRect extends EventEmitter {
   svgElement: SVGSVGElement
   rectElement: SVGRectElement
   hitBoxElement: SVGRectElement
+  tempStartX: number
+  tempStartY: number
 
   constructor(color: string = DEFAULT_FILL) {
     super();
@@ -49,7 +51,7 @@ export class NoteRect extends EventEmitter {
   get id() { return this._id; }
   set id(v) {
     this._id = v;
-    this._debugTextElement.textContent = v;
+    // this._debugTextElement.textContent = v;
   }
   // get index() { return this._index; }
   // set index(v) {
@@ -72,6 +74,7 @@ export class NoteRect extends EventEmitter {
     this.svgElement.setAttribute('x', v);
     // this.rectElement.setAttribute('x', v);
   }
+  get y() { return Number(this.svgElement.getAttribute('y')); }
   set y(v) {
     this.svgElement.setAttribute('y', v);
     // this.rectElement.setAttribute('y', v);

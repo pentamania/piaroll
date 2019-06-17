@@ -43,7 +43,7 @@ export class App {
     // track-wrapper
     const trackWrapper = createDiv();
     trackWrapper.style.display = "flex";
-    trackWrapper.style.background = "limegreen"; // チャート長さが足りないときの背景色
+    // trackWrapper.style.background = "limegreen"; // チャート長さが足りないときの背景色
     // trackWrapper.style.width = params.width + "px"; // チャート長さが足りないときは？
     trackWrapper.style.position = "relative";
     wrapper.appendChild(trackWrapper);

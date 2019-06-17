@@ -9,7 +9,7 @@ export class TrackModel {
     this._listeners = [];
     this._data = data;
 
-    /* add accessor */
+    /* add accessor: defaultアクセサを用意？ */
     Object.keys(data).forEach((key)=> {
       Object.defineProperty(this, key, {
         get() { return data[key]; },
