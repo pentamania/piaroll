@@ -7,23 +7,24 @@ import { cloneObj, shallowDiff, arrayItemSimpleDiff } from "../utils";
 import { TrackModel } from "../TrackModel";
 import { KeyState as globalKeyState } from "../KeyState";
 const DEFAULT_NOTE_WIDTH = 16;
-// interface Note {
-//   tick: number
-//   length: number
-//   trackId: number
-//   selected: boolean
-// }
-// interface State {
-//   barNum: number
-//   barWidth: number
-//   trackNum: number
-//   trackHeight: number
-//   currentTick: number,
-//   notes: Note[]
-// }
+
+interface noteParam {
+  trackId: number
+  tick: number // change
+  duration?: number
+  selected: boolean
+}
+interface State {
+  barNum?: number
+  barWidth?: number
+  trackNum?: number
+  trackHeight?: number
+  currentTick?: number,
+  notes: noteParam[]
+}
 
 const defaultState = {
-  resolution: 192,
+  resolution: 1920,
   barNum: 1,
   barWidth: 80,
   trackNum: 1,
@@ -44,8 +45,11 @@ export class TrackChart {
 
   private _chartWidth: number = 0
   private _chartHeight: number = 0
+  private _divSnapUnit: number
+  private _xToTickFactor: number
+  private _tickToXFactor: number
   // private _state = cloneObj(defaultState)
-  private _state = { notes:[] }
+  private _state: State = { notes:[] }
   private _noteRects:NoteRect[] = []
   private _model: TrackModel
   // isWriteMode: boolean = false
@@ -130,6 +134,7 @@ export class TrackChart {
       }
     })
 
+    // 初期設定はどうする？
     this.render(cloneObj(defaultState));
   }
 
@@ -140,18 +145,18 @@ export class TrackChart {
 
   /**
    * convert methods
-   * TODO: cache calculation result if possible
    */
   tickToX(tick: number):number {
-    // console.log("tickToX", tick / this._state.resolution * this._state.barWidth);
-    // console.log("tickToX", tick, this._state.resolution, this._state.barWidth);
-    return tick / this._state.resolution * this._state.barWidth;
+    // return tick / this._state.resolution * this._state.barWidth;
+    return tick * this._tickToXFactor;
   }
   xToTick(x: number):number {
-    return x * this._state.resolution / this._state.barWidth;
+    // return x * this._state.resolution / this._state.barWidth;
+    return x * this._xToTickFactor;
   }
   snapToDiv(x: number):number {
-    const unit = this._state.barWidth/this._state.divNum;
+    // const unit = this._state.barWidth / this._state.divNum;
+    const unit = this._divSnapUnit;
     return Math.floor(x/unit) * unit;
   }
   yToTrackId(y: number) {
@@ -228,6 +233,8 @@ export class TrackChart {
         }
       });
       if (!noteXExceedingRangeExists) {
+        // TODO:移動量は一つのnoteRectを基準にする
+        // const deltaX = this.snapToDiv(noteRect.x) - noteRect.tempStartX
         xMovingRects.forEach((d)=> {
           const targetNoteRect = this._noteRects[d.index];
           targetNoteRect.x = this.snapToDiv(d.dest);
@@ -365,51 +372,93 @@ export class TrackChart {
   render(newState) {
     const chartSvg = this._chartSvg
     let bgRedrawFlag = false;
-    let widthChangeFlag = false;
-    let heightChangeFlag = false;
+    let chartWidthUpdateFlag = false;
+    let chartHeightUpdateFlag = false;
+    let snapUnitRecalcFlag = false;
+    let convertFactorRecalcFlag = false;
+    let currentTickUpdateFlag = false;
+    let noteRectHorizontalUpdateFlag = false;
+    let noteRectVerticalUpdateFlag = false;
     newState = Object.assign({}, defaultState, newState);
     const paramDiffs = shallowDiff(this._state, newState)
     const noteDiffs = arrayItemSimpleDiff(this._state.notes, newState.notes, NOTE_ID_KEY)
-    // console.log(paramDiffs, noteDiffs);
+
     this._state = newState; // 先にセット
+    // console.log(paramDiffs, noteDiffs);
 
     paramDiffs.forEach(diff => {
       const key = diff.key;
-      const value = diff.value;
       if (key === "barNum" || key === "barWidth") {
-        widthChangeFlag = true;
+        chartWidthUpdateFlag = true;
         if (key === "barWidth") {
           bgRedrawFlag = true;
-          // noteRect.xの再設定、長さの再設定
-          this._noteRects.forEach((noteRect) => {
-            noteRect.x = this.tickToX(noteRect.tick);
-            if (noteRect.duration != null) {
-              noteRect.width = this.tickToX(noteRect.duration);
-            }
-          })
-          // currentの位置更新
-          this._currentLineRect.setAttribute('x', String(this.tickToX(newState.currentTick)));
+          snapUnitRecalcFlag = true;
+          convertFactorRecalcFlag = true;
+          noteRectHorizontalUpdateFlag = true;
+          currentTickUpdateFlag = true;
         }
       } else if (key === "trackNum" || key === "trackHeight") {
-        heightChangeFlag = true;
+        chartHeightUpdateFlag = true;
         if (key === "trackHeight") {
           bgRedrawFlag = true;
-          // noteRectの縦サイズ変更
-          this._noteRects.forEach((noteRect) => {
-            noteRect.height = newState.trackHeight;
-            noteRect.y = noteRect.trackId * newState.trackHeight;
-          })
+          noteRectVerticalUpdateFlag = true
         }
       } else if (key === "currentTick") {
-        this._currentLineRect.setAttribute('x', String(this.tickToX(value)));
+        currentTickUpdateFlag = true;
       } else if (key === "divNum") {
         bgRedrawFlag = true;
+        snapUnitRecalcFlag = true;
       } else if (key === "resolution") {
-        // @TODO: tickToXの計算をcache
+        convertFactorRecalcFlag = true;
+        noteRectHorizontalUpdateFlag = true;
+        currentTickUpdateFlag = true;
       }
     });
 
-    // ノーツ変化
+    /* update cached parameters */
+    if (snapUnitRecalcFlag) {
+      this._divSnapUnit = newState.barWidth / newState.divNum;
+    }
+    if (convertFactorRecalcFlag) {
+      this._xToTickFactor = newState.resolution / newState.barWidth;
+      this._tickToXFactor = 1 / newState.resolution * newState.barWidth;
+    }
+
+    /* update views: rafを使う？ */
+    if (chartWidthUpdateFlag) {
+      this._chartWidth = newState.barWidth * newState.barNum;
+      chartSvg.setAttribute('width', String(this._chartWidth));
+    }
+    if (chartHeightUpdateFlag) {
+      this._chartHeight = newState.trackHeight * newState.trackNum;
+      const chartHeightStr = String(this._chartHeight);
+      chartSvg.setAttribute('height', chartHeightStr);
+      this._currentLineRect.setAttribute('height', chartHeightStr);
+    }
+    if (bgRedrawFlag) {
+      setTrackBackground(chartSvg, {
+        width: newState.barWidth,
+        height: newState.trackHeight,
+        divNum: newState.divNum,
+      });
+    }
+    if (currentTickUpdateFlag) {
+      this._currentLineRect.setAttribute('x', String(this.tickToX(newState.currentTick)));
+    }
+    if (noteRectHorizontalUpdateFlag || noteRectVerticalUpdateFlag) {
+      this._noteRects.forEach((noteRect) => {
+        if (noteRectHorizontalUpdateFlag) {
+          noteRect.x = this.tickToX(noteRect.tick);
+          if (noteRect.duration != null) noteRect.width = this.tickToX(noteRect.duration);
+        }
+        if (noteRectVerticalUpdateFlag) {
+          noteRect.y = noteRect.trackId * newState.trackHeight;
+          noteRect.height = newState.trackHeight;
+        }
+      })
+    }
+
+    /* update notes */
     noteDiffs.forEach((diff)=> {
       switch (diff.kind) {
         case "new":
@@ -424,25 +473,6 @@ export class TrackChart {
           break;
       }
     });
-
-    /* update chart */
-    if (widthChangeFlag) {
-      this._chartWidth = newState.barWidth * newState.barNum;
-      chartSvg.setAttribute('width', String(this._chartWidth));
-    }
-    if (heightChangeFlag) {
-      this._chartHeight = newState.trackHeight * newState.trackNum;
-      const chartHeightStr = String(this._chartHeight);
-      chartSvg.setAttribute('height', chartHeightStr);
-      this._currentLineRect.setAttribute('height', chartHeightStr);
-    }
-    if (bgRedrawFlag) {
-      setTrackBackground(chartSvg, {
-        width: newState.barWidth,
-        height: newState.trackHeight,
-        divNum: newState.divNum,
-      });
-    }
   }
 }
 
