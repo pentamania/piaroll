@@ -9,6 +9,7 @@ const HITBOX_WIDTH = 4;
 export class NoteRect extends EventEmitter {
 
   private _width = 0
+  private _height = 0
   private _tick = 0
   private _trackId = 0
   private _activeStrokeStyle = "#FFF"
@@ -65,7 +66,9 @@ export class NoteRect extends EventEmitter {
     this.rectElement.setAttribute("width", String(v));
     this.hitBoxElement.setAttribute("x", String(v - HITBOX_WIDTH));
   }
+  get height() { return this._height; }
   set height(v) {
+    this._height = v;
     this.rectElement.setAttribute("height", String(v));
     this.hitBoxElement.setAttribute('height', String(v));
   }

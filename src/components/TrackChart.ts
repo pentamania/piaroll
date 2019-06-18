@@ -1,12 +1,14 @@
 // import EventEmitter from "EventEmitter";
 // import deef from "deep-diff";
 import { SVG_NAMESPACE, NOTE_ID_KEY } from "../config";
-import {NoteRect} from "./NoteRect";
+import { NoteRect } from "./NoteRect";
+import { BrushRect } from "./BrushRect";
 import {setTrackBackground} from "../drawBackground";
-import { cloneObj, shallowDiff, arrayItemSimpleDiff } from "../utils";
+import { cloneObj, shallowDiff, arrayItemSimpleDiff, testRectRect } from "../utils";
 import { TrackModel } from "../TrackModel";
 import { KeyState as globalKeyState } from "../KeyState";
 const DEFAULT_NOTE_WIDTH = 16;
+const SELECTION_MIN_THRESHOLD = 5;
 
 interface noteParam {
   trackId: number
@@ -45,6 +47,7 @@ export class TrackChart {
 
   private _chartWidth: number = 0
   private _chartHeight: number = 0
+  // private _chartBoundingRect // headerWidthを変えたりしてchartの位置が変わったときだけ更新する
   private _divSnapUnit: number
   private _xToTickFactor: number
   private _tickToXFactor: number
@@ -52,8 +55,10 @@ export class TrackChart {
   private _state: State = { notes:[] }
   private _noteRects:NoteRect[] = []
   private _model: TrackModel
-  // isWriteMode: boolean = false
-  isWriteMode: boolean = true
+  private _currentSetX: number = 0;
+  // private _brush: BrushRect
+  isWriteMode: boolean = false
+  // isWriteMode: boolean = true
 
   set model(v: TrackModel) { this._model = v; }
 
@@ -78,32 +83,121 @@ export class TrackChart {
     line.setAttribute('fill', "red");
     this._svgLineLayer.appendChild(line);
 
-    // mouse/touch event
-    // mouseupにするとノーツ移動の最後とかに引っかかる
+    /* mouse/touch event */
     chartSvg.addEventListener('mousedown', (e)=> {
-      console.log('chart mousedown');
       // ノーツ選択状態を全解除
       this._model.setAllNotes((note)=> {
         note.selected = false;
       });
+    });
 
-      if (this.isWriteMode) {
-        const rect = e.target.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+    /* brush selection setting */
+    const brush = new BrushRect();
+    brush.append(this._svgLineLayer);
+    let startX = 0;
+    let startY = 0;
+    let isDragging = false;
+    let tempChartRect;
+    const selectionRect = { x: 0, y: 0, width: 0, height: 0 };
+    chartSvg.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      const chartRect = tempChartRect = chartSvg.getBoundingClientRect();
+      // const chartRect = e.target.getBoundingClientRect(); // なぜか値が不安定になるため使わない
+      // const chartRect = this._chartBoundingRect;
+      const x = e.clientX - chartRect.left;
+      const y = e.clientY - chartRect.top;
 
-        // add note
-        var noteX = this.snapToDiv(x);
-        this._model.addNote({
-          tick: this.xToTick(noteX),
-          trackId: this.yToTrackId(y),
-          selected: false,
-        })
+      startX = x;
+      startY = y;
+      brush.x = x;
+      brush.y = y;
+      brush.width = 0;
+      brush.height = 0;
+      brush.visible = true;
+    });
+
+    chartSvg.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      // e.stopPropagation();
+
+      const chartRect = tempChartRect;
+      // const chartRect = chartSvg.getBoundingClientRect();
+      // const chartRect = this._chartBoundingRect;
+      const x = e.clientX - chartRect.left;
+      const y = e.clientY - chartRect.top;
+      const dx = x - startX;
+      const dy = y - startY;
+
+      if (dx < 0) {
+        brush.x = x;
+        brush.width = Math.abs(dx);
       } else {
-
+        brush.x = startX;
+        brush.width = dx;
       }
 
-      // todo: brushの設定
+      // 始点よりマイナス側に移動
+      if (dy < 0) {
+        brush.y = y;
+        brush.height = Math.abs(dy);
+      } else {
+        brush.y = startY;
+        brush.height = dy;
+      }
+    })
+    document.addEventListener('mouseup', (e) => {
+      if (!isDragging) return;
+
+      const chartRect = tempChartRect;
+      // const chartRect = chartSvg.getBoundingClientRect();
+      // const chartRect = this._chartBoundingRect;
+      const x = e.clientX - chartRect.left;
+      const y = e.clientY - chartRect.top;
+      const dx = x - startX;
+      const dy = y - startY;
+      const adx = Math.abs(dx);
+      const ady = Math.abs(dy);
+
+      if (adx < SELECTION_MIN_THRESHOLD && ady < SELECTION_MIN_THRESHOLD) {
+        /* when move is small */
+        if (this.isWriteMode) {
+          // add note
+          var noteX = this.snapToDiv(x);
+          this._model.addNote({
+            tick: this.xToTick(noteX),
+            trackId: this.yToTrackId(y),
+            selected: false,
+          })
+        } else {
+          this._currentSetX = this.snapToDiv(x);
+          console.log(this._currentSetX);
+        }
+      } else {
+        if (dx < 0) {
+          selectionRect.x = x;
+          selectionRect.width = adx;
+        } else {
+          selectionRect.x = startX;
+          selectionRect.width = adx;
+        }
+        if (dy < 0) {
+          selectionRect.y = y;
+          selectionRect.height = ady;
+        } else {
+          selectionRect.y = startY;
+          selectionRect.height = ady;
+        }
+
+        /* select noteRect within range */
+        this._noteRects.forEach((nRect) => {
+          if (testRectRect(selectionRect, nRect)) {
+            this._model.setNoteById(nRect.id, 'selected', true);
+          }
+        })
+      }
+
+      isDragging = false;
+      brush.visible = false;
     });
 
     // key event: トラック増やすと厄介？
@@ -118,6 +212,12 @@ export class TrackChart {
 
         } else if (e.key === 'v') {
           // 貼り付け
+        } else if (e.key === 'd') {
+          // 選択全解除
+          e.preventDefault();
+          this._model.setAllNotes((note) => {
+            note.selected = false;
+          });
         }
       }
       if (e.key === 'Backspace' || e.key === 'Delete') {
@@ -140,6 +240,7 @@ export class TrackChart {
 
   append(parent) {
     parent.appendChild(this._chartSvg);
+    // this._chartBoundingRect = this._chartSvg.getBoundingClientRect();
     return this;
   }
 
@@ -166,7 +267,7 @@ export class TrackChart {
   addNoteRect(noteParam) {
     const chartSvg = this._chartSvg
     const noteRect = new NoteRect();
-    // console.log(noteParam, noteParam[NOTE_ID_KEY]);
+    console.log(noteParam, noteParam[NOTE_ID_KEY]);
 
     /* noteRect setup */
     noteRect.id = noteParam[NOTE_ID_KEY];
