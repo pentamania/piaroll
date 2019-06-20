@@ -30,9 +30,9 @@ export function shallowDiff(lhs: object, rhs: object): shDiff[] {
 
 
 interface itemDiff {
-  kind: string // "remove" "new" "edit"
+  kind: string // "remove" "new" "edit" "length"
   key: any
-  value?: any|any[]
+  value?: any|any[] // [itemKey, itemValue]
   // propKey?: number
   // propValue?: number
 }
@@ -45,11 +45,18 @@ interface itemDiff {
 export function arrayItemSimpleDiff(lhs, rhs, idKeyProp): itemDiff[] {
   const changes = [];
   const rArrayClone = rhs.slice(0);
+  if (lhs.length != rhs.length) {
+    changes.push({
+      kind: "length",
+      key: null,
+      value: rhs.length,
+    });
+  }
   lhs.forEach((lNote) => {
     const searchResult = rhs.find((rNote, j) => {
       // idKey対応するノートみつかる
       // console.log(idKeyProp, lNote[idKeyProp]);
-      if (lNote[idKeyProp] === rNote[idKeyProp]) {
+      if (lNote[idKeyProp] === rNote[idKeyProp]) { // undefined同士でもtrue
         // property差分をみつける
         const rhsNotePropsClone = cloneObj(rNote);
         Object.keys(lNote).forEach((noteProp) => {

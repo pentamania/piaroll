@@ -1,11 +1,12 @@
 // import EventEmitter from "EventEmitter";
 // import deef from "deep-diff";
 import { SVG_NAMESPACE, NOTE_ID_KEY } from "../config";
+import { AbstractChart } from "./AbstractChart";
 import { NoteRect } from "./NoteRect";
 import { BrushRect } from "./BrushRect";
+import { TrackModel } from "../TrackModel";
 import {setTrackBackground} from "../drawBackground";
 import { cloneObj, shallowDiff, arrayItemSimpleDiff, testRectRect } from "../utils";
-import { TrackModel } from "../TrackModel";
 import { KeyState as globalKeyState } from "../KeyState";
 const DEFAULT_NOTE_WIDTH = 16;
 const SELECTION_MIN_THRESHOLD = 5;
@@ -19,50 +20,46 @@ interface noteParam {
 interface State {
   barNum?: number
   barWidth?: number
-  trackNum?: number
+  // trackNum?: number
   trackHeight?: number
-  currentTick?: number,
+  currentTick?: number
   notes: noteParam[]
+  tracks: []
 }
 
 const defaultState = {
   resolution: 1920,
   barNum: 1,
   barWidth: 80,
-  trackNum: 1,
+  // trackNum: 1,
   trackHeight: 60,
   currentTick: 0,
   divNum: 4,
   notes: [],
+  tracks: []
 }
 
 /**
  * @class TrackComponent
  */
-export class TrackChart {
-  private _chartSvg: SVGSVGElement
+export class TrackChart extends AbstractChart {
   private _svgNoteLayer: SVGGElement
   private _svgLineLayer: SVGGElement
   private _currentLineRect: SVGRectElement
 
-  private _chartWidth: number = 0
-  private _chartHeight: number = 0
-  // private _chartBoundingRect // headerWidthを変えたりしてchartの位置が変わったときだけ更新する
   private _divSnapUnit: number
-  private _xToTickFactor: number
-  private _tickToXFactor: number
-  // private _state = cloneObj(defaultState)
-  private _state: State = { notes:[] }
+  private _state: State = { notes:[], tracks:[] }
   private _noteRects:NoteRect[] = []
-  private _model: TrackModel
   private _currentSetX: number = 0;
-  // private _brush: BrushRect
   isWriteMode: boolean = false
   // isWriteMode: boolean = true
+  // private _chartBoundingRect // headerWidthを変えたりしてchartの位置が変わったときだけ更新する
 
+  private _model: TrackModel
   set model(v: TrackModel) { this._model = v; }
 
   constructor() {
+    super();
     // main
     var chartSvg = this._chartSvg = document.createElementNS(SVG_NAMESPACE, "svg");
     chartSvg.style.boxSizing = 'border-box';
@@ -238,23 +235,6 @@ export class TrackChart {
     this.render(cloneObj(defaultState));
   }
 
-  append(parent) {
-    parent.appendChild(this._chartSvg);
-    // this._chartBoundingRect = this._chartSvg.getBoundingClientRect();
-    return this;
-  }
-
-  /**
-   * convert methods
-   */
-  tickToX(tick: number):number {
-    // return tick / this._state.resolution * this._state.barWidth;
-    return tick * this._tickToXFactor;
-  }
-  xToTick(x: number):number {
-    // return x * this._state.resolution / this._state.barWidth;
-    return x * this._xToTickFactor;
-  }
   snapToDiv(x: number):number {
     // const unit = this._state.barWidth / this._state.divNum;
     const unit = this._divSnapUnit;
@@ -483,6 +463,7 @@ export class TrackChart {
     newState = Object.assign({}, defaultState, newState);
     const paramDiffs = shallowDiff(this._state, newState)
     const noteDiffs = arrayItemSimpleDiff(this._state.notes, newState.notes, NOTE_ID_KEY)
+    const trackDiffs = arrayItemSimpleDiff(this._state.tracks, newState.tracks, "key")
 
     this._state = newState; // 先にセット
     // console.log(paramDiffs, noteDiffs);
@@ -498,7 +479,8 @@ export class TrackChart {
           noteRectHorizontalUpdateFlag = true;
           currentTickUpdateFlag = true;
         }
-      } else if (key === "trackNum" || key === "trackHeight") {
+      // } else if (key === "trackNum" || key === "trackHeight") {
+      } else if (key === "trackHeight") {
         chartHeightUpdateFlag = true;
         if (key === "trackHeight") {
           bgRedrawFlag = true;
@@ -516,6 +498,11 @@ export class TrackChart {
       }
     });
 
+    /* trackNum change */
+    trackDiffs.forEach((diff)=> {
+      if (diff.kind === 'length') chartHeightUpdateFlag = true;
+    })
+
     /* update cached parameters */
     if (snapUnitRecalcFlag) {
       this._divSnapUnit = newState.barWidth / newState.divNum;
@@ -531,7 +518,8 @@ export class TrackChart {
       chartSvg.setAttribute('width', String(this._chartWidth));
     }
     if (chartHeightUpdateFlag) {
-      this._chartHeight = newState.trackHeight * newState.trackNum;
+      // this._chartHeight = newState.trackHeight * newState.trackNum;
+      this._chartHeight = newState.trackHeight * newState.tracks.length;
       const chartHeightStr = String(this._chartHeight);
       chartSvg.setAttribute('height', chartHeightStr);
       this._currentLineRect.setAttribute('height', chartHeightStr);
@@ -576,17 +564,3 @@ export class TrackChart {
     });
   }
 }
-
-// // mixin EventEmitter methods
-// Object.assign(TrackComponent.prototype, EventEmitter.prototype);
-
-
-// /**
-//  * @class ScaleTrackComponent
-//  * 目盛り領域
-//  */
-// export class ScaleTrackComponent extends AbstractTrack {
-//   constructor() {
-//     super();
-//   }
-// }
