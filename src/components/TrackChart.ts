@@ -1,7 +1,11 @@
 // import EventEmitter from "EventEmitter";
 // import deef from "deep-diff";
-import { SVG_NAMESPACE, NOTE_ID_KEY } from "../config";
-import { AbstractChart } from "./AbstractChart";
+import {
+  SVG_NAMESPACE,
+  NOTE_ID_KEY,
+  TRACK_DEFAULT_STATE as defaultState
+} from "../config";
+import { AbstractChart } from "./abstracts/AbstractChart";
 import { NoteRect } from "./NoteRect";
 import { BrushRect } from "./BrushRect";
 import { TrackModel } from "../TrackModel";
@@ -24,18 +28,6 @@ interface State {
   trackHeight?: number
   currentTick?: number
   notes: noteParam[]
-  tracks: []
-}
-
-const defaultState = {
-  resolution: 1920,
-  barNum: 1,
-  barWidth: 80,
-  // trackNum: 1,
-  trackHeight: 60,
-  currentTick: 0,
-  divNum: 4,
-  notes: [],
   tracks: []
 }
 

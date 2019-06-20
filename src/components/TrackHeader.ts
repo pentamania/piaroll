@@ -38,7 +38,7 @@ class HeaderComponent {
     }
   }
 
-  constructor() {
+  constructor(addButton = true) {
     var el = this.element = createDiv();
     el.style.width = "100%";
     el.style.boxSizing = 'border-box';
@@ -47,18 +47,20 @@ class HeaderComponent {
     el.style.background = "#6B6B70";
 
     // mute button area: WIP
-    var muteButton = this._muteButton = document.createElement('span')
-    muteButton.style.width = "12px";
-    muteButton.style.height = "12px";
-    muteButton.style.boxSizing = 'border-box';
-    muteButton.style.borderRadius = "50%";
-    muteButton.style.display = "inline-block";
-    this.active = true;
-    muteButton.addEventListener('click', (e)=> {
-      // TODO: dispatch isMute prop change
-      this.active = (this.active) ? false : true;
-    })
-    el.appendChild(muteButton);
+    if (addButton) {
+      var muteButton = this._muteButton = document.createElement('span')
+      muteButton.style.width = "12px";
+      muteButton.style.height = "12px";
+      muteButton.style.boxSizing = 'border-box';
+      muteButton.style.borderRadius = "50%";
+      muteButton.style.display = "inline-block";
+      this.active = true;
+      muteButton.addEventListener('click', (e)=> {
+        // TODO: dispatch isMute prop change
+        this.active = (this.active) ? false : true;
+      })
+      el.appendChild(muteButton);
+    }
 
     var la = this._labelArea = document.createElement('span');
     el.appendChild(la);
@@ -107,7 +109,7 @@ export class TrackHeader {
       // TODO: add/edit style setting
       switch (diff.kind) {
         case "new":
-          var newHeader = new HeaderComponent();
+          var newHeader = (diff.value['muted'] != null) ? new HeaderComponent() : new HeaderComponent(false);
           newHeader.text = diff.value['label'];
           newHeader.height = newState.trackHeight;
           newHeader.id = diff.value[KEY_PROP];

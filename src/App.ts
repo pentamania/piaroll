@@ -1,4 +1,5 @@
 import { TrackChart } from "./components/TrackChart";
+import { ScaleTrackChart } from "./components/ScaleTrackChart";
 import { TrackHeader } from "./components/TrackHeader";
 import { TrackModel } from "./TrackModel";
 import { createDiv } from "./utils";
@@ -100,9 +101,37 @@ export class App {
   }
 
   /**
+   * @method addScaleTrack
+   * @param data
+   * @returns {TrackModel}
+   */
+  addScaleTrack(data) {
+    /* Model */
+    const scaleTrackModel = new TrackModel(data);
+    const dataClone = scaleTrackModel.getData();
+
+    // header
+    const headerGroup = new TrackHeader().append(this.headerContainer);
+    headerGroup.render(dataClone);
+
+    // chart
+    var chart = new ScaleTrackChart().append(this.chartInner);
+    chart.render(dataClone);
+    // chart.model = scaleTrackModel;
+
+    scaleTrackModel.subscribe(function () {
+      headerGroup.render(scaleTrackModel.getData());
+      chart.render(scaleTrackModel.getData());
+    });
+
+    this._trackModels.push(scaleTrackModel);
+
+    return scaleTrackModel;
+  }
+
+  /**
    * Add Note-track
    * @param data
-   * @param key
    * @returns {TrackModel}
    */
   addTrack(data) {
@@ -136,10 +165,4 @@ export class App {
     return trackModel;
   }
 
-  /**
-   * scaleTrack
-   */
-  addScaleTrack() {
-
-  }
 }
