@@ -3,7 +3,8 @@
 import {
   SVG_NAMESPACE,
   NOTE_ID_KEY,
-  TRACK_DEFAULT_STATE as defaultState
+  TRACK_DEFAULT_STATE as defaultState,
+  MARKER_COLOR,
 } from "../config";
 import { AbstractChart } from "./abstracts/AbstractChart";
 import { NoteRect } from "./NoteRect";
@@ -66,10 +67,10 @@ export class TrackChart extends AbstractChart {
 
     // current line
     var line = this._currentLineRect = document.createElementNS(SVG_NAMESPACE, "rect");
-    line.setAttribute('width', "2");
+    line.setAttribute('width', "3");
     line.setAttribute('height', "200");
     line.setAttribute('y', "0");
-    line.setAttribute('fill', "red");
+    line.setAttribute('fill', MARKER_COLOR);
     this._svgLineLayer.appendChild(line);
 
     /* mouse/touch event */
@@ -524,7 +525,8 @@ export class TrackChart extends AbstractChart {
       });
     }
     if (currentTickUpdateFlag) {
-      this._currentLineRect.setAttribute('x', String(this.tickToX(newState.currentTick)));
+      const x = this.tickToX(newState.currentTick) - Number(this._currentLineRect.getAttribute('width'))*0.5
+      this._currentLineRect.setAttribute('x', String(x));
     }
     if (noteRectHorizontalUpdateFlag || noteRectVerticalUpdateFlag) {
       this._noteRects.forEach((noteRect) => {

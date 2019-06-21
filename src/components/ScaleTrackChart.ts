@@ -6,12 +6,13 @@ import {
 import { shallowDiff } from "../utils";
 import { SvgText } from "./SvgText";
 import { AbstractChart } from "./abstracts/AbstractChart";
+import { App } from "../App";
 const DEFAULT_SCALE_BACKGROUND_COLOR = "#645F8B";
 
 // marker config
-const markerH = 6;
-const markerRad = 10;
-const points = `-${markerRad},-${markerH / 2} ${markerRad},-${markerH / 2} 0,${markerH}`
+const MARKER_H = 7;
+const MARKER_RAD = 9;
+const POINTS = `-${MARKER_RAD},-${MARKER_H / 2} ${MARKER_RAD},-${MARKER_H / 2} 0,${MARKER_H}`
 
 /**
  * @class ScaleChart
@@ -22,9 +23,11 @@ export class ScaleTrackChart extends AbstractChart {
   private _measureTexts: SvgText[] = []
   private _state = { tracks: []}
   private _markerSvg: SVGPolygonElement
+  private _app: App
 
-  constructor() {
+  constructor(app) {
     super();
+    this._app = app;
 
     // main chart
     const chartSvg = this._chartSvg = document.createElementNS(SVG_NAMESPACE, "svg");
@@ -32,15 +35,19 @@ export class ScaleTrackChart extends AbstractChart {
     chartSvg.style.display = 'block';
     chartSvg.style.background = DEFAULT_SCALE_BACKGROUND_COLOR;
     chartSvg.style.borderBottom = 'solid 1px gray';
+    chartSvg.style.cursor = 'pointer';
 
     // marker
     const marker = this._markerSvg = document.createElementNS(SVG_NAMESPACE, "polygon");
-    marker.setAttribute('points', points);
+    marker.setAttribute('points', POINTS);
     marker.setAttribute('fill', MARKER_COLOR);
     chartSvg.appendChild(marker);
 
+    // user event
     chartSvg.addEventListener('click', (e)=> {
-      // TODO: set currentTick via app
+      const chartRect = chartSvg.getBoundingClientRect();
+      const x = e.clientX - chartRect.left;
+      this._app.currentTick = this.xToTick(x)
     });
   }
 
@@ -110,7 +117,7 @@ export class ScaleTrackChart extends AbstractChart {
       chartSvg.setAttribute('height', String(this._chartHeight));
     }
     if (currentTickUpdateFlag) {
-      this._markerSvg.style.transform = `translate(${this.tickToX(newState.currentTick)}px, ${this._chartHeight - markerH}px)`;
+      this._markerSvg.style.transform = `translate(${this.tickToX(newState.currentTick)}px, ${this._chartHeight - MARKER_H}px)`;
     }
     if (measureTextUpdateFlag) {
       this.setMeasures(newState);

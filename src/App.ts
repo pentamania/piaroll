@@ -1,3 +1,4 @@
+import EventEmitter from 'wolfy87-eventemitter';
 import { TrackChart } from "./components/TrackChart";
 import { ScaleTrackChart } from "./components/ScaleTrackChart";
 import { TrackHeader } from "./components/TrackHeader";
@@ -16,7 +17,7 @@ interface AppParam {
 /**
  * @class App
  */
-export class App {
+export class App extends EventEmitter {
   public root: HTMLElement
   headerContainer: HTMLElement
   chartContainer: HTMLElement
@@ -26,6 +27,7 @@ export class App {
   private _trackModels = []
 
   constructor(params: AppParam) {
+    super();
     if (params.root != null) {
       this.root = document.querySelector(params.root);
     } else {
@@ -91,6 +93,12 @@ export class App {
       tm.barWidth = v;
     });
   }
+  set currentTick(v: number) {
+    this._trackModels.forEach((tm) => {
+      tm.currentTick = v;
+    });
+    this.emit('changeCurrentTick', v);
+  }
 
   set headerWidth(v: number) {
     this._headerWidth = v;
@@ -115,7 +123,7 @@ export class App {
     headerGroup.render(dataClone);
 
     // chart
-    var chart = new ScaleTrackChart().append(this.chartInner);
+    var chart = new ScaleTrackChart(this).append(this.chartInner);
     chart.render(dataClone);
     // chart.model = scaleTrackModel;
 

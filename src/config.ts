@@ -18,4 +18,4 @@ export const TRACK_DEFAULT_STATE = Object.freeze({
   notes: [],
   tracks: []
 })
-export const MARKER_COLOR = "rgb(245, 120, 0";
+export const MARKER_COLOR = "rgb(255, 50, 5)";
