@@ -5,6 +5,7 @@ import {
   NOTE_ID_KEY,
   TRACK_DEFAULT_STATE as defaultState,
   MARKER_COLOR,
+  iNoteParam,
 } from "../config";
 import { AbstractChart } from "./abstracts/AbstractChart";
 import { NoteRect } from "./NoteRect";
@@ -16,19 +17,13 @@ import { KeyState as globalKeyState } from "../KeyState";
 const DEFAULT_NOTE_WIDTH = 16;
 const SELECTION_MIN_THRESHOLD = 5;
 
-interface noteParam {
-  trackId: number
-  tick: number // change
-  duration?: number
-  selected?: boolean
-}
 interface State {
   barNum?: number
   barWidth?: number
   // trackNum?: number
   trackHeight?: number
   currentTick?: number
-  notes: noteParam[]
+  notes: iNoteParam[]
   tracks: []
 }
 
@@ -46,7 +41,7 @@ export class TrackChart extends AbstractChart {
   // private _currentX: number = 0
   private _currentSelectedTick: number = 0
   private _currentSelectedTrackId: number = 0;
-  private _clipBoardNotes: noteParam[] = [];
+  private _clipBoardNotes: iNoteParam[] = [];
   private _app
   isWriteMode: boolean = false
   _isActive: boolean = false
@@ -305,7 +300,7 @@ export class TrackChart extends AbstractChart {
 
   addNoteRect(noteParam) {
     const chartSvg = this._chartSvg
-    const noteRect = new NoteRect();
+    const noteRect = new NoteRect(noteParam.fill, noteParam.extendable);
     console.log(noteParam, noteParam[NOTE_ID_KEY]);
 
     /* noteRect setup */
@@ -443,7 +438,7 @@ export class TrackChart extends AbstractChart {
       this._model.setNoteById(noteRect.id, "duration", duration); // notify change
       dragStartX = 0; // reset
     }
-    noteRect.hitBoxElement.addEventListener('mousedown', onStartNoteExtend);
+    if (noteRect.extensionElement != null) noteRect.extensionElement.addEventListener('mousedown', onStartNoteExtend);
     chartSvg.addEventListener('mousemove', onMoveNoteExtend);
     chartSvg.addEventListener('mouseup', onEndNoteExtend);
 
@@ -453,7 +448,7 @@ export class TrackChart extends AbstractChart {
       document.removeEventListener('mousemove', onDragMove);
       document.removeEventListener('mouseup', onDragEnd);
 
-      noteRect.hitBoxElement.removeEventListener('mousedown', onStartNoteExtend);
+      if (noteRect.extensionElement != null) noteRect.extensionElement.removeEventListener('mousedown', onStartNoteExtend);
       chartSvg.removeEventListener('mousemove', onMoveNoteExtend);
       chartSvg.removeEventListener('mouseup', onEndNoteExtend);
     });

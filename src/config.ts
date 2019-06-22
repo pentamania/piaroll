@@ -19,3 +19,12 @@ export const TRACK_DEFAULT_STATE = Object.freeze({
   tracks: []
 })
 export const MARKER_COLOR = "rgb(255, 50, 5)";
+
+export interface iNoteParam {
+  trackId: number
+  tick: number // change later
+  duration?: number
+  fill?: string
+  extendable?: boolean|string
+  selected?: boolean
+}

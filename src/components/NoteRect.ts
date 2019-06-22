@@ -25,33 +25,39 @@ export class NoteRect extends EventEmitter {
   tempStartX: number
   tempStartY: number
 
-  private containerElement: SVGSVGElement
-  rectElement: SVGRectElement
-  hitBoxElement: SVGRectElement
+  private _containerElement: SVGSVGElement
   private _debugTextElement
+  private _rectElement: SVGRectElement
+  extensionElement: SVGRectElement
 
-  constructor(color: string = DEFAULT_FILL) {
+  constructor(
+    color: string = DEFAULT_FILL,
+    extendable:boolean|string = true
+  ) {
     super();
 
     // container svg
-    this.containerElement = document.createElementNS(SVG_NAMESPACE, "svg");
+    this._containerElement = document.createElementNS(SVG_NAMESPACE, "svg");
 
     // main rect svg
-    this.rectElement = document.createElementNS(SVG_NAMESPACE, "rect");
+    this._rectElement = document.createElementNS(SVG_NAMESPACE, "rect");
     // this.svgElement = document.createElementNS(SVG_NAMESPACE, "rect");
-    this.rectElement.setAttribute('stroke-width', String(STROKE_WIDTH));
+    this._rectElement.setAttribute('stroke-width', String(STROKE_WIDTH));
     this.fill = color;
-    this.containerElement.appendChild(this.rectElement);
+    this._containerElement.appendChild(this._rectElement);
 
     // extension rect on edge
-    this.hitBoxElement = document.createElementNS(SVG_NAMESPACE, "rect");
-    this.hitBoxElement.setAttribute('width', String(EXTENSION_RECT_WIDTH));
-    this.hitBoxElement.setAttribute('fill', EXTENSTION_RECT_FILL);
-    this.containerElement.appendChild(this.hitBoxElement);
+    if (extendable) {
+      const fill = (typeof extendable === "string") ? extendable : EXTENSTION_RECT_FILL;
+      this.extensionElement = document.createElementNS(SVG_NAMESPACE, "rect");
+      this.extensionElement.setAttribute('width', String(EXTENSION_RECT_WIDTH));
+      this.extensionElement.setAttribute('fill', fill);
+      this._containerElement.appendChild(this.extensionElement);
+    }
 
     this._debugTextElement = document.createElementNS(SVG_NAMESPACE, "text")
     this._debugTextElement.setAttribute('y', "16");
-    this.containerElement.appendChild(this._debugTextElement);
+    this._containerElement.appendChild(this._debugTextElement);
 
     // TODO: 画像を追加できるようにする
   }
@@ -65,35 +71,35 @@ export class NoteRect extends EventEmitter {
   get x() { return this._x; }
   set x(v: number) {
     this._x = v;
-    this.containerElement.setAttribute('x', String(v));
+    this._containerElement.setAttribute('x', String(v));
     // this.rectElement.setAttribute('x', v);
   }
   get y() { return this._y; }
   set y(v: number) {
     this._y = v;
-    this.containerElement.setAttribute('y', String(v));
+    this._containerElement.setAttribute('y', String(v));
     // this.rectElement.setAttribute('y', v);
   }
   get width() { return this._width; }
   set width(v) {
     this._width = v;
-    this.rectElement.setAttribute("width", String(v));
-    this.hitBoxElement.setAttribute("x", String(v - EXTENSION_RECT_WIDTH));
+    this._rectElement.setAttribute("width", String(v));
+    if (this.extensionElement != null) this.extensionElement.setAttribute("x", String(v - EXTENSION_RECT_WIDTH));
   }
   get height() { return this._height; }
   set height(v) {
     this._height = v;
-    this.rectElement.setAttribute("height", String(v));
-    this.hitBoxElement.setAttribute('height', String(v));
+    this._rectElement.setAttribute("height", String(v));
+    if (this.extensionElement != null) this.extensionElement.setAttribute('height', String(v));
   }
   get selected() { return this._selected; }
   set selected(v) {
     if (v === true) {
       this._selected = true;
-      this.rectElement.setAttribute('stroke', this._activeStrokeStyle);
+      this._rectElement.setAttribute('stroke', this._activeStrokeStyle);
     } else {
       this._selected = false;
-      this.rectElement.setAttribute('stroke', null);
+      this._rectElement.setAttribute('stroke', null);
     }
   }
 
@@ -106,23 +112,23 @@ export class NoteRect extends EventEmitter {
   get fill() { return this._fillStyle; };
   set fill(v) {
     this._fillStyle = v;
-    this.rectElement.setAttribute('fill', v);
+    this._rectElement.setAttribute('fill', v);
   }
 
   append(parent) {
-    parent.appendChild(this.containerElement);
+    parent.appendChild(this._containerElement);
   }
 
   remove() {
-    this.containerElement.parentElement.removeChild(this.containerElement);
+    this._containerElement.parentElement.removeChild(this._containerElement);
     this.emit('removed');
   }
 
   addEventListener(...v) {
-    this.rectElement.addEventListener(v[0], v[1])
+    this._rectElement.addEventListener(v[0], v[1])
   }
   removeEventListener(...v) {
-    this.rectElement.removeEventListener(v[0], v[1])
+    this._rectElement.removeEventListener(v[0], v[1])
   }
 
 }
