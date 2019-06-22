@@ -25,6 +25,7 @@ export class App extends EventEmitter {
   private _headerWidth = 0;
   // private _trackModels = {}
   private _trackModels = []
+  private _trackCharts: TrackChart[] = []
 
   constructor(params: AppParam) {
     super();
@@ -152,7 +153,7 @@ export class App extends EventEmitter {
     headerGroup.render(dataClone);
 
     // note-chart
-    var chart = new TrackChart().append(this.chartInner);
+    var chart = new TrackChart(this).append(this.chartInner);
     chart.render(dataClone);
     chart.model = trackModel;
 
@@ -168,9 +169,17 @@ export class App extends EventEmitter {
       // })
     });
 
+    this._trackCharts.push(chart);
     this._trackModels.push(trackModel);
 
     return trackModel;
+  }
+
+  setActiveChart(activeChart) {
+    this._trackCharts.forEach(chart=> {
+      chart.active = false;
+    });
+    activeChart.active = true;
   }
 
 }

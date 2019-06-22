@@ -20,7 +20,7 @@ interface noteParam {
   trackId: number
   tick: number // change
   duration?: number
-  selected: boolean
+  selected?: boolean
 }
 interface State {
   barNum?: number
@@ -43,16 +43,34 @@ export class TrackChart extends AbstractChart {
   private _divSnapUnit: number
   private _state: State = { notes:[], tracks:[] }
   private _noteRects:NoteRect[] = []
-  private _currentSetX: number = 0;
+  // private _currentX: number = 0
+  private _currentSelectedTick: number = 0
+  private _currentSelectedTrackId: number = 0;
+  private _clipBoardNotes: noteParam[] = [];
+  private _app
   isWriteMode: boolean = false
+  _isActive: boolean = false
   // isWriteMode: boolean = true
   // private _chartBoundingRect // headerWidthを変えたりしてchartの位置が変わったときだけ更新する
+
+  set active(v) {
+    if  (v == false) {
+      this._clipBoardNotes.length = 0; // clear
+      this._model.setAllNotes((note) => note.selected = false);
+    }
+    this._isActive = v;
+    // console.log('set active', v);
+  }
 
   private _model: TrackModel
   set model(v: TrackModel) { this._model = v; }
 
-  constructor() {
+  get maxTrackId() { return this._state.tracks.length-1; }
+
+  constructor(app) {
     super();
+    this._app = app;
+
     // main
     var chartSvg = this._chartSvg = document.createElementNS(SVG_NAMESPACE, "svg");
     chartSvg.style.boxSizing = 'border-box';
@@ -75,11 +93,8 @@ export class TrackChart extends AbstractChart {
 
     /* mouse/touch event */
     chartSvg.addEventListener('mousedown', (e)=> {
-      // ノーツ選択状態を全解除
-      this._model.setAllNotes((note)=> {
-        note.selected = false;
-      });
-    });
+      if (!this._isActive) this._app.setActiveChart(this);
+    }, true);
 
     /* brush selection setting */
     const brush = new BrushRect();
@@ -90,6 +105,10 @@ export class TrackChart extends AbstractChart {
     let tempChartRect;
     const selectionRect = { x: 0, y: 0, width: 0, height: 0 };
     chartSvg.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      // ノーツ選択状態を全解除
+      this._model.setAllNotes((note) => note.selected = false );
+
       isDragging = true;
       const chartRect = tempChartRect = chartSvg.getBoundingClientRect();
       // const chartRect = e.target.getBoundingClientRect(); // なぜか値が不安定になるため使わない
@@ -108,6 +127,7 @@ export class TrackChart extends AbstractChart {
 
     chartSvg.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
+      e.preventDefault();
       // e.stopPropagation();
 
       const chartRect = tempChartRect;
@@ -137,6 +157,7 @@ export class TrackChart extends AbstractChart {
     })
     document.addEventListener('mouseup', (e) => {
       if (!isDragging) return;
+      e.preventDefault();
 
       const chartRect = tempChartRect;
       // const chartRect = chartSvg.getBoundingClientRect();
@@ -159,8 +180,11 @@ export class TrackChart extends AbstractChart {
             selected: false,
           })
         } else {
-          this._currentSetX = this.snapToDiv(x);
-          console.log(this._currentSetX);
+          /* memoraize selected position */
+          // this._currentX = this.snapToDiv(x);
+          this._currentSelectedTick = this.xToTick(this.snapToDiv(x));
+          this._currentSelectedTrackId = this.yToTrackId(y);
+          // console.log(this._currentSelectedTick, this._currentSelectedTrackId);
         }
       } else {
         if (dx < 0) {
@@ -191,23 +215,65 @@ export class TrackChart extends AbstractChart {
     });
 
     // key event: トラック増やすと厄介？
+    const copyNote = function (noteRect: NoteRect) {
+      return {
+        tick: noteRect.tick,
+        trackId: noteRect.trackId,
+        duration: noteRect.duration,
+      }
+    };
     document.addEventListener('keydown', (e) => {
       // console.log(e.key)
+      if (!this._isActive) return;
+
       if (e.ctrlKey) {
         if (e.key === 'c') {
-          // コピー
-
+          /* copy */
+          this._clipBoardNotes.length = 0; // clear
+          this._noteRects.forEach((nr)=> {
+            if (nr.selected) {
+              this._clipBoardNotes.push(copyNote(nr));
+            }
+          })
         } else if (e.key === 'x') {
-          // 切り取り
-
+          /* cut */
+          this._clipBoardNotes.length = 0; // clear
+          const removed = [];
+          this._noteRects.forEach((nr) => {
+            if (nr.selected) {
+              this._clipBoardNotes.push(copyNote(nr));
+              removed.push(nr.id);
+            }
+          })
+          this._model.removeNoteById(removed);
         } else if (e.key === 'v') {
-          // 貼り付け
+          /* paste */
+          if (!this._clipBoardNotes.length) return;
+          // tick最小ノートが基準
+          const cloneNotes = cloneObj(this._clipBoardNotes);
+          const standard = cloneNotes.reduce((a,b)=> {
+            return a.tick < b.tick ? a : b;
+          });
+          // console.log("star", standard);
+          const standardTrackId = standard.trackId;
+          const standardTick = standard.tick;
+          cloneNotes.forEach((noteParam)=> {
+            if (noteParam === standard) {
+              noteParam.tick = this._currentSelectedTick;
+              noteParam.trackId = this._currentSelectedTrackId;
+            } else {
+              noteParam.tick += this._currentSelectedTick - standardTick;
+              noteParam.trackId = this._currentSelectedTrackId - (standardTrackId - noteParam.trackId);
+            };
+            noteParam.selected = true;
+            if (0 <= noteParam.trackId && noteParam.trackId <= this.maxTrackId) {
+              this._model.addNote(noteParam)
+            }
+          });
         } else if (e.key === 'd') {
           // 選択全解除
           e.preventDefault();
-          this._model.setAllNotes((note) => {
-            note.selected = false;
-          });
+          this._model.setAllNotes((note) => note.selected = false);
         }
       }
       if (e.key === 'Backspace' || e.key === 'Delete') {
