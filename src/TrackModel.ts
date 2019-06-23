@@ -1,4 +1,4 @@
-import { NOTE_ID_KEY } from "./config";
+import { NOTE_ID_KEY, TRACK_MODEL_PROPERTIES } from "./config";
 
 export class TrackModel {
   private _listeners;
@@ -10,7 +10,7 @@ export class TrackModel {
     this._data = data;
 
     /* add accessor: defaultアクセサを用意？ */
-    Object.keys(data).forEach((key)=> {
+    TRACK_MODEL_PROPERTIES.forEach((key)=> {
       Object.defineProperty(this, key, {
         get() { return data[key]; },
         set(v) {
@@ -20,8 +20,9 @@ export class TrackModel {
         enumerable: true,
         configurable: true
       })
-      // add id to each note
-      if (key === 'notes') {
+
+      /* add id to each note */
+      if (key === 'notes' && typeof data[key] === 'object') {
         data[key].forEach(note => {
           // note[NOTE_ID_KEY] = this._serialId++;
           Object.defineProperty(note, NOTE_ID_KEY, {
@@ -30,7 +31,6 @@ export class TrackModel {
             enumerable: true, // getDataでクローンを渡す際に必要
             configurable: false
           })
-
         });
       }
     });

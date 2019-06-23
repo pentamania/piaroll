@@ -27,6 +27,40 @@ export class App extends EventEmitter {
   private _trackModels = []
   private _trackCharts: TrackChart[] = []
 
+  set headerWidth(v: number) {
+    this._headerWidth = v;
+    const cssLeft = this._headerWidth + "px";
+    this.headerContainer.style.width = cssLeft;
+    this.chartContainer.style.left = cssLeft;
+    this.chartContainer.style.width = `calc(100% - ${cssLeft})`;
+  }
+  set resolution(v: number) {
+    this._trackModels.forEach((tm) => {
+      tm.resolution = v;
+    });
+  }
+  set barWidth(v: number) {
+    this._trackModels.forEach((tm) => {
+      tm.barWidth = v;
+    });
+  }
+  set barNum(v: number) {
+    this._trackModels.forEach((tm) => {
+      tm.barNum = v;
+    });
+  }
+  set divNum(v: number) {
+    this._trackModels.forEach((tm) => {
+      tm.divNum = v;
+    });
+  }
+  set currentTick(v: number) {
+    this._trackModels.forEach((tm) => {
+      tm.currentTick = v;
+    });
+    this.emit('changeCurrentTick', v);
+  }
+
   constructor(params: AppParam) {
     super();
     if (params.root != null) {
@@ -87,26 +121,6 @@ export class App extends EventEmitter {
 
     // init
     this.headerWidth = params.headerWidth;
-  }
-
-  set barWidth(v: number) {
-    this._trackModels.forEach((tm)=> {
-      tm.barWidth = v;
-    });
-  }
-  set currentTick(v: number) {
-    this._trackModels.forEach((tm) => {
-      tm.currentTick = v;
-    });
-    this.emit('changeCurrentTick', v);
-  }
-
-  set headerWidth(v: number) {
-    this._headerWidth = v;
-    const cssLeft = this._headerWidth + "px";
-    this.headerContainer.style.width = cssLeft;
-    this.chartContainer.style.left = cssLeft;
-    this.chartContainer.style.width = `calc(100% - ${cssLeft})`;
   }
 
   /**
