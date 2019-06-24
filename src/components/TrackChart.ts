@@ -6,6 +6,7 @@ import {
   TRACK_DEFAULT_STATE as defaultState,
   MARKER_COLOR,
   iNoteParam,
+  EVENT_POINT_START_CHART,
 } from "../config";
 import { AbstractChart } from "./abstracts/AbstractChart";
 import { NoteRect } from "./NoteRect";
@@ -43,9 +44,8 @@ export class TrackChart extends AbstractChart {
   private _currentSelectedTrackId: number = 0;
   private _clipBoardNotes: iNoteParam[] = [];
   private _app
-  isWriteMode: boolean = false
+  isSnapping: boolean = true
   _isActive: boolean = false
-  // isWriteMode: boolean = true
   // private _chartBoundingRect // headerWidthを変えたりしてchartの位置が変わったときだけ更新する
 
   set active(v) {
@@ -164,23 +164,21 @@ export class TrackChart extends AbstractChart {
       const adx = Math.abs(dx);
       const ady = Math.abs(dy);
 
+      /* when move is small */
       if (adx < SELECTION_MIN_THRESHOLD && ady < SELECTION_MIN_THRESHOLD) {
-        /* when move is small */
-        if (this.isWriteMode) {
-          // add note
-          var noteX = this.snapToDiv(x);
-          this._model.addNote({
-            tick: this.xToTick(noteX),
-            trackId: this.yToTrackId(y),
-            selected: false,
-          })
-        } else {
-          /* memoraize selected position */
-          // this._currentX = this.snapToDiv(x);
-          this._currentSelectedTick = this.xToTick(this.snapToDiv(x));
-          this._currentSelectedTrackId = this.yToTrackId(y);
-          // console.log(this._currentSelectedTick, this._currentSelectedTrackId);
-        }
+
+        /* emit event */
+        const setX = (this.isSnapping) ? this.snapToDiv(x) : x;
+        this._model.emit(EVENT_POINT_START_CHART, {
+          x: setX,
+          tick: this.xToTick(setX),
+          trackId: this.yToTrackId(y),
+        });
+
+        /* memoraize selected position */
+        this._currentSelectedTick = this.xToTick(this.snapToDiv(x));
+        this._currentSelectedTrackId = this.yToTrackId(y);
+        // console.log(this._currentSelectedTick, this._currentSelectedTrackId);
       } else {
         if (dx < 0) {
           selectionRect.x = x;

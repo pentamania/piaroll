@@ -31,6 +31,9 @@ export const TRACK_DEFAULT_STATE = Object.freeze({
 })
 export const MARKER_COLOR = "rgb(255, 50, 5)";
 
+// events
+export const EVENT_POINT_START_CHART = 'onpointchart';
+
 export interface iNoteParam {
   trackId: number
   tick: number // change later

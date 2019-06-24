@@ -1,11 +1,13 @@
 import { NOTE_ID_KEY, TRACK_MODEL_PROPERTIES } from "./config";
+import EventEmitter from 'wolfy87-eventemitter';
 
-export class TrackModel {
+export class TrackModel extends EventEmitter {
   private _listeners;
   private _data;
   private _serialId = 0;
 
   constructor(data) {
+    super();
     this._listeners = [];
     this._data = data;
 
@@ -75,7 +77,7 @@ export class TrackModel {
     var target = this._data.notes.find((note)=> {
       return note[NOTE_ID_KEY] === id;
     });
-    console.log(prop, target);
+    // console.log(prop, target);
 
     if (target) {
       target[prop] = val;
