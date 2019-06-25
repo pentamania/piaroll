@@ -207,7 +207,8 @@ export class TrackChart extends AbstractChart {
       brush.visible = false;
     });
 
-    // key event: トラック増やすと厄介？
+    /* key event: トラック増やすと厄介？ */
+    // TODO: NoteRect.idから該当するnoteを返す
     const copyNote = function (noteRect: NoteRect) {
       return {
         tick: noteRect.tick,
@@ -316,9 +317,12 @@ export class TrackChart extends AbstractChart {
 
     /* note move by drag */
     let moveStartX = 0;
-    let moveStartY = 0;
+    // let moveStartY = 0;
+    let chartRect;
     const onDragStart = (e) => {
+      e.preventDefault(); // for smooth move
       e.stopPropagation(); // chart自体のイベント発火を止める
+      chartRect = chartSvg.getBoundingClientRect();
 
       if (!noteRect.selected) {
         // shiftキー押しで連続選択できるように
@@ -335,7 +339,8 @@ export class TrackChart extends AbstractChart {
       // }
 
       moveStartX = e.clientX;
-      moveStartY = e.clientY;
+      // moveStartY = e.clientY;
+
       // 以下だと初期位置が更新されないことがある
       // if (noteRect.selected) {
       //   noteRect.tempStartX = noteRect.x;
@@ -350,52 +355,62 @@ export class TrackChart extends AbstractChart {
     }
     const onDragMove = (e) => {
       if (!moveStartX) return;
+      e.preventDefault(); // for smooth move
       e.stopPropagation();
 
-      // x-axis move
-      const deltaX = e.clientX - moveStartX;
+      /* x-axis move */
+      const pointerDeltaX = e.clientX - moveStartX;
       const xMovingRects = [];
       const noteXExceedingRangeExists = this._noteRects.some((nRect, i) => {
         if (nRect.selected && nRect.tempStartX != null) {
-          const dest = nRect.tempStartX + deltaX;
+          const dest = nRect.tempStartX + pointerDeltaX;
           if (dest < 0 || this._chartWidth - nRect.width < dest) return true;
           xMovingRects.push({
             index: i,
-            dest: dest,
+            // dest: dest,
           })
         }
       });
       if (!noteXExceedingRangeExists) {
-        // TODO:移動量は一つのnoteRectを基準にする
-        // const deltaX = this.snapToDiv(noteRect.x) - noteRect.tempStartX
+        /* use current noteRect as standard */
+        const standardNoteDestX = noteRect.tempStartX + pointerDeltaX;
+        noteRect.x = (this.isSnapping) ? this.snapToDiv(standardNoteDestX) : standardNoteDestX;
+        const standardNoteDeltaX = noteRect.x - noteRect.tempStartX;
         xMovingRects.forEach((d)=> {
           const targetNoteRect = this._noteRects[d.index];
-          targetNoteRect.x = this.snapToDiv(d.dest);
+          targetNoteRect.x = targetNoteRect.tempStartX + standardNoteDeltaX;
+          // targetNoteRect.x = this.snapToDiv(d.dest);
         });
       }
 
-      // y-axis move
-      const deltaY = e.clientY - moveStartY;
+      /* y-axis move: depends on trackId  */
+      const pointerY = e.clientY - chartRect.top;
+      const trackIdDelta = this.yToTrackId(pointerY) - noteRect.trackId;
+      // const deltaY = e.clientY - moveStartY;
       const yMovingRects = [];
       const noteYExceedingRangeExists = this._noteRects.some((nRect, i) => {
         if (nRect.selected && nRect.tempStartY != null) {
-          const dest = nRect.tempStartY + deltaY;
-          if (dest < 0 || this._chartHeight - this._state.trackHeight < dest) return true;
+          const destId = nRect.trackId + trackIdDelta;
+          if (destId < 0 || this.maxTrackId < destId) return true;
+          // const dest = nRect.tempStartY + deltaY;
+          // if (dest < 0 || this._chartHeight - this._state.trackHeight < dest) return true;
           yMovingRects.push({
             index: i,
-            dest: dest,
+            // dest: dest,
           })
         }
       });
       if (!noteYExceedingRangeExists) {
         yMovingRects.forEach((d) => {
           const targetNoteRect = this._noteRects[d.index];
-          targetNoteRect.y = this.yToTrackId(d.dest) * this._state.trackHeight;
+          targetNoteRect.y = (targetNoteRect.trackId + trackIdDelta) * this._state.trackHeight;
+          // targetNoteRect.y = this.yToTrackId(d.dest) * this._state.trackHeight;
         });
       }
     }
     const onDragEnd = (e) => {
       if (!moveStartX) return;
+      e.preventDefault(); // for smooth move
       e.stopPropagation();
 
       // 変更を通知
@@ -416,12 +431,14 @@ export class TrackChart extends AbstractChart {
     let startWidth = 0;
     const onStartNoteExtend = (e) => {
       e.stopPropagation(); // chart自体のイベント発火を止める
+      e.preventDefault(); // for smooth move
       dragStartX = e.clientX;
       startWidth = noteRect.width;
     }
     const onMoveNoteExtend = (e) => {
       if (!dragStartX) return;
       e.stopPropagation();
+      e.preventDefault(); // for smooth move
       let destWidth = startWidth + (e.clientX - dragStartX);
       destWidth = this.snapToDiv(destWidth);
       if (destWidth < DEFAULT_NOTE_WIDTH) return;
@@ -430,6 +447,7 @@ export class TrackChart extends AbstractChart {
     const onEndNoteExtend = (e) => {
       if (!dragStartX) return;
       e.stopPropagation();
+      e.preventDefault(); // for smooth move
       const duration = this.xToTick(noteRect.width);
       noteRect.duration = duration;
       // this._model.setNote(index, "duration", duration);
@@ -440,8 +458,8 @@ export class TrackChart extends AbstractChart {
     chartSvg.addEventListener('mousemove', onMoveNoteExtend);
     chartSvg.addEventListener('mouseup', onEndNoteExtend);
 
+    // unlease eventlistener after removal
     noteRect.once('removed', (e) => {
-      console.log('note removed!!!!');
       noteRect.removeEventListener('mousedown', onDragStart);
       document.removeEventListener('mousemove', onDragMove);
       document.removeEventListener('mouseup', onDragEnd);
