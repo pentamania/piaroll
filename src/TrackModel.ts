@@ -7,6 +7,8 @@ import {
 } from "./config";
 import EventEmitter from 'wolfy87-eventemitter';
 
+type stringOrNum = number | number;
+
 export class TrackModel extends EventEmitter {
   private _listeners;
   private _data;
@@ -59,20 +61,28 @@ export class TrackModel extends EventEmitter {
     this.emit(EVENT_ADD_NOTE, props);
   }
 
-  removeNoteById(id) {
-    if (id.length) {
+  removeNoteById(id: stringOrNum | stringOrNum[]) {
+    const searchAndRemove = (id)=> {
+      let removed: [];
+      this._data.notes.some((note, i) => {
+        if (note[NOTE_ID_KEY] === id) {
+          removed = this._data.notes.splice(i, 1);
+          return true;
+        }
+      });
+      return removed;
+    }
+    let removedNotes = [];
+    if (typeof id === 'object') {
       id.forEach(_id => {
-        this._data.notes = this._data.notes.filter((note) => {
-          return (note[NOTE_ID_KEY] != _id)
-        })
+        removedNotes = removedNotes.concat(searchAndRemove(_id));
       });
     } else {
-      this._data.notes = this._data.notes.filter((note) => {
-        return (note[NOTE_ID_KEY] != id)
-      })
+      removedNotes = removedNotes.concat(searchAndRemove(id));
     }
     // console.table(this._data.notes);
     this.dispatchChange();
+    this.emit(EVENT_REMOVE_NOTE, removedNotes);
   }
 
   // setNote(index:number, prop:string, val:any):void {
