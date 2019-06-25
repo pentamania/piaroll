@@ -33,6 +33,9 @@ export const MARKER_COLOR = "rgb(255, 50, 5)";
 
 // events
 export const EVENT_POINT_START_CHART = 'onpointchart';
+export const EVENT_ADD_NOTE = 'addnote';
+export const EVENT_EDIT_NOTE = 'editnote';
+export const EVENT_REMOVE_NOTE = 'removenote';
 
 export interface iNoteParam {
   trackId: number

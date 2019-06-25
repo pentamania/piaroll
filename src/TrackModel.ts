@@ -1,4 +1,10 @@
-import { NOTE_ID_KEY, TRACK_MODEL_PROPERTIES } from "./config";
+import {
+  NOTE_ID_KEY,
+  TRACK_MODEL_PROPERTIES,
+  EVENT_ADD_NOTE,
+  EVENT_REMOVE_NOTE,
+  EVENT_EDIT_NOTE,
+} from "./config";
 import EventEmitter from 'wolfy87-eventemitter';
 
 export class TrackModel extends EventEmitter {
@@ -50,6 +56,7 @@ export class TrackModel extends EventEmitter {
     props[NOTE_ID_KEY] = this._serialId++;
     this._data.notes.push(props);
     this.dispatchChange();
+    this.emit(EVENT_ADD_NOTE, props);
   }
 
   removeNoteById(id) {
@@ -82,6 +89,7 @@ export class TrackModel extends EventEmitter {
     if (target) {
       target[prop] = val;
       this.dispatchChange();
+      this.emit(EVENT_EDIT_NOTE, target);
     }
   }
 
