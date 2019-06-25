@@ -207,17 +207,14 @@ export class TrackChart extends AbstractChart {
       brush.visible = false;
     });
 
-    /* key event: トラック増やすと厄介？ */
-    // TODO: NoteRect.idから該当するnoteを返す
-    const copyNote = function (noteRect: NoteRect) {
-      return {
-        tick: noteRect.tick,
-        trackId: noteRect.trackId,
-        duration: noteRect.duration,
-      }
+    /* key event: only works when track is active */
+    const copyNote = (noteRect: NoteRect)=> {
+      const copiedNote = this._state.notes.find((note)=> {
+        return note[NOTE_ID_KEY] === noteRect.id;
+      });
+      return cloneObj(copiedNote);
     };
     document.addEventListener('keydown', (e) => {
-      // console.log(e.key)
       if (!this._isActive) return;
 
       if (e.ctrlKey) {
