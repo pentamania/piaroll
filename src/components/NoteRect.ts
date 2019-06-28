@@ -6,6 +6,10 @@ const ACTIVE_STROKE_STYLE = "#FFF";
 const EXTENSION_RECT_WIDTH = 4;
 const EXTENSTION_RECT_FILL = "#ce3939";
 
+// cssで拡張できるようにする？
+const INPUT_ELEMENT_WIDTH = 36;
+const INPUT_ELEMENT_HEIGHT = 16;
+
 /**
  * @class NoteRect
  */
@@ -25,43 +29,15 @@ export class NoteRect extends EventEmitter {
   tempStartX: number
   tempStartY: number
 
+  /* elements */
   private _containerElement: SVGSVGElement
   private _debugTextElement
   private _rectElement: SVGRectElement
+  private _foreignInputWrapper: SVGForeignObjectElement
+  inputElement: HTMLInputElement
   extensionElement: SVGRectElement
 
-  constructor(
-    color: string = DEFAULT_FILL,
-    extendable:boolean|string = true
-  ) {
-    super();
-
-    // container svg
-    this._containerElement = document.createElementNS(SVG_NAMESPACE, "svg");
-
-    // main rect svg
-    this._rectElement = document.createElementNS(SVG_NAMESPACE, "rect");
-    // this.svgElement = document.createElementNS(SVG_NAMESPACE, "rect");
-    this._rectElement.setAttribute('stroke-width', String(STROKE_WIDTH));
-    this.fill = color;
-    this._containerElement.appendChild(this._rectElement);
-
-    // extension rect on edge
-    if (extendable) {
-      const fill = (typeof extendable === "string") ? extendable : EXTENSTION_RECT_FILL;
-      this.extensionElement = document.createElementNS(SVG_NAMESPACE, "rect");
-      this.extensionElement.setAttribute('width', String(EXTENSION_RECT_WIDTH));
-      this.extensionElement.setAttribute('fill', fill);
-      this._containerElement.appendChild(this.extensionElement);
-    }
-
-    this._debugTextElement = document.createElementNS(SVG_NAMESPACE, "text")
-    this._debugTextElement.setAttribute('y', "16");
-    this._containerElement.appendChild(this._debugTextElement);
-
-    // TODO: 画像を追加できるようにする
-  }
-
+  /* accesssors */
   get id() { return this._id; }
   set id(v) {
     this._id = v;
@@ -90,7 +66,10 @@ export class NoteRect extends EventEmitter {
   set height(v) {
     this._height = v;
     this._rectElement.setAttribute("height", String(v));
-    if (this.extensionElement != null) this.extensionElement.setAttribute('height', String(v));
+    if (this.extensionElement != null) 
+      this.extensionElement.setAttribute('height', String(v));
+    if (this._foreignInputWrapper) 
+      this._foreignInputWrapper.setAttribute('y', String((v - INPUT_ELEMENT_HEIGHT)*0.5));
   }
   get selected() { return this._selected; }
   set selected(v) {
@@ -102,17 +81,70 @@ export class NoteRect extends EventEmitter {
       this._rectElement.setAttribute('stroke', null);
     }
   }
-
   get tick() { return this._tick; }
   set tick(v: number) { this._tick = v; }
-
   get trackId() { return this._trackId; }
   set trackId(v: number) { this._trackId = v; }
-
   get fill() { return this._fillStyle; };
   set fill(v) {
     this._fillStyle = v;
     this._rectElement.setAttribute('fill', v);
+  }
+  get inputValue() { return this.inputElement.value };
+  set inputValue(v:number|string) {
+    if (!this.inputElement) {
+      var fi = this._foreignInputWrapper = document.createElementNS(SVG_NAMESPACE, "foreignObject");
+      fi.setAttribute('width', String(INPUT_ELEMENT_WIDTH));
+      fi.setAttribute('height', String(INPUT_ELEMENT_HEIGHT));
+      fi.setAttribute('y', String(this.height));
+      this._containerElement.appendChild(fi)
+
+      var input = this.inputElement = document.createElement('input');
+      this.inputElement.type = (typeof v === 'number') ? 'number' : 'text';
+      // スタイリング：CSSクラス付与でカスタムできるようにする？
+      input.style.position = "absolute";
+      input.style.padding = "0";
+      input.style.border = "none";
+      input.style.background = "transparent";
+      // input.style.width = INPUT_ELEMENT_WIDTH+"px";
+      fi.appendChild(this.inputElement)
+    }
+    this.inputElement.value = String(v);
+  }
+
+  /**
+   * constructor
+   */
+  constructor(
+    color: string = DEFAULT_FILL,
+    extendable:boolean|string = true
+  ) {
+    super();
+
+    // container-svg
+    this._containerElement = document.createElementNS(SVG_NAMESPACE, "svg");
+
+    // main-rect-svg
+    this._rectElement = document.createElementNS(SVG_NAMESPACE, "rect");
+    // this.svgElement = document.createElementNS(SVG_NAMESPACE, "rect");
+    this._rectElement.setAttribute('stroke-width', String(STROKE_WIDTH));
+    this.fill = color;
+    this._containerElement.appendChild(this._rectElement);
+
+    // extension-rect on edge
+    if (extendable) {
+      const fill = (typeof extendable === "string") ? extendable : EXTENSTION_RECT_FILL;
+      this.extensionElement = document.createElementNS(SVG_NAMESPACE, "rect");
+      this.extensionElement.setAttribute('width', String(EXTENSION_RECT_WIDTH));
+      this.extensionElement.setAttribute('fill', fill);
+      this._containerElement.appendChild(this.extensionElement);
+    }
+
+    this._debugTextElement = document.createElementNS(SVG_NAMESPACE, "text")
+    this._debugTextElement.setAttribute('y', "16");
+    this._containerElement.appendChild(this._debugTextElement);
+
+    // TODO: 画像を追加できるようにする
   }
 
   append(parent) {
@@ -127,6 +159,7 @@ export class NoteRect extends EventEmitter {
   addEventListener(...v) {
     this._rectElement.addEventListener(v[0], v[1])
   }
+
   removeEventListener(...v) {
     this._rectElement.removeEventListener(v[0], v[1])
   }

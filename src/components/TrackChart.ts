@@ -5,6 +5,7 @@ import {
   NOTE_ID_KEY,
   TRACK_DEFAULT_STATE as defaultState,
   MARKER_COLOR,
+  NOTE_PROP_LABEL,
   iNoteParam,
   EVENT_POINT_START_CHART,
 } from "../config";
@@ -100,7 +101,7 @@ export class TrackChart extends AbstractChart {
     let tempChartRect;
     const selectionRect = { x: 0, y: 0, width: 0, height: 0 };
     chartSvg.addEventListener('mousedown', (e) => {
-      e.preventDefault();
+      // e.preventDefault(); // bothers noteRect input area
       // ノーツ選択状態を全解除
       this._model.setAllNotes((note) => note.selected = false );
 
@@ -290,14 +291,13 @@ export class TrackChart extends AbstractChart {
     const unit = this._divSnapUnit;
     return Math.floor(x/unit) * unit;
   }
-  yToTrackId(y: number) {
-    return Math.floor(y / this._state.trackHeight);
-  }
+  yToTrackId(y: number) { return Math.floor(y / this._state.trackHeight); }
 
   addNoteRect(noteParam) {
     const chartSvg = this._chartSvg
     const noteRect = new NoteRect(noteParam.fill, noteParam.extendable);
-    console.log(noteParam, noteParam[NOTE_ID_KEY]);
+    let inputLabelEventHandler;
+    // console.log(noteParam, noteParam[NOTE_ID_KEY]);
 
     /* noteRect setup */
     noteRect.id = noteParam[NOTE_ID_KEY];
@@ -307,6 +307,14 @@ export class TrackChart extends AbstractChart {
     if (noteParam.duration) {
       noteRect.width = this.tickToX(noteParam.duration);
       noteRect.duration = noteParam.duration;
+    }
+    if (noteParam[NOTE_PROP_LABEL] != null) {
+      noteRect.inputValue = noteParam[NOTE_PROP_LABEL];
+      inputLabelEventHandler = (e) => {
+        // console.log('changed', e.target.value);
+        this._model.setNoteById(noteParam[NOTE_ID_KEY], NOTE_PROP_LABEL, e.target.value)
+      };
+      noteRect.inputElement.addEventListener('input', inputLabelEventHandler);
     }
     noteRect.y = noteParam.trackId * this._state.trackHeight;
     noteRect.trackId = noteParam.trackId;
@@ -460,8 +468,9 @@ export class TrackChart extends AbstractChart {
       noteRect.removeEventListener('mousedown', onDragStart);
       document.removeEventListener('mousemove', onDragMove);
       document.removeEventListener('mouseup', onDragEnd);
-
+      
       if (noteRect.extensionElement != null) noteRect.extensionElement.removeEventListener('mousedown', onStartNoteExtend);
+      if (inputLabelEventHandler != null) noteRect.inputElement.removeEventListener('input', inputLabelEventHandler);
       chartSvg.removeEventListener('mousemove', onMoveNoteExtend);
       chartSvg.removeEventListener('mouseup', onEndNoteExtend);
     });

@@ -1,8 +1,22 @@
+// genearal const
 const DEFAULT_RESOLUTION = 1920;
 const TRACK_DEFAULT_HEIGHT = 60;
 
+// Note/NoteRect const
 export const NOTE_WIDTH = 8;
 export const NOTE_ID_KEY = "__piano_uid__";
+export const NOTE_PROP_LABEL = 'label';
+export interface iNoteParam {
+  trackId: number
+  tick: number // change later
+  duration?: number
+  fill?: string
+  extendable?: boolean|string
+  selected?: boolean
+  label?: string
+}
+
+// chart/track const
 export const CHART_PADDING = {
   left: 30,
   top: 30,
@@ -37,11 +51,3 @@ export const EVENT_ADD_NOTE = 'addnote';
 export const EVENT_EDIT_NOTE = 'editnote';
 export const EVENT_REMOVE_NOTE = 'removenote';
 
-export interface iNoteParam {
-  trackId: number
-  tick: number // change later
-  duration?: number
-  fill?: string
-  extendable?: boolean|string
-  selected?: boolean
-}
