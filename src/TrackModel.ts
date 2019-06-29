@@ -4,6 +4,8 @@ import {
   EVENT_ADD_NOTE,
   EVENT_REMOVE_NOTE,
   EVENT_EDIT_NOTE,
+  NOTE_PROP_TRACK,
+  DEFAULT_TRACK_ID,
 } from "./config";
 import EventEmitter from 'wolfy87-eventemitter';
 
@@ -31,8 +33,8 @@ export class TrackModel extends EventEmitter {
         configurable: true
       })
 
-      /* add id to each note */
       if (key === 'notes' && typeof data[key] === 'object') {
+        /* add id to each note */
         data[key].forEach(note => {
           // note[NOTE_ID_KEY] = this._serialId++;
           Object.defineProperty(note, NOTE_ID_KEY, {
@@ -40,7 +42,11 @@ export class TrackModel extends EventEmitter {
             writable: false,
             enumerable: true, // getDataでクローンを渡す際に必要
             configurable: false
-          })
+          });
+
+          /* add default */
+          if (note[NOTE_PROP_TRACK] == null)
+            note[NOTE_PROP_TRACK] = DEFAULT_TRACK_ID;
         });
       }
     });
@@ -56,6 +62,8 @@ export class TrackModel extends EventEmitter {
 
   addNote(props) {
     props[NOTE_ID_KEY] = this._serialId++;
+    if (props[NOTE_PROP_TRACK] == null)
+      props[NOTE_PROP_TRACK] = DEFAULT_TRACK_ID;
     this._data.notes.push(props);
     this.dispatchChange();
     this.emit(EVENT_ADD_NOTE, props);
@@ -100,7 +108,7 @@ export class TrackModel extends EventEmitter {
     var target = this._data.notes.find((note)=> {
       return note[NOTE_ID_KEY] === id;
     });
-    
+
     if (target && target[prop] !== val) {
       target[prop] = val;
       this.dispatchChange();

@@ -4,12 +4,14 @@ const TRACK_DEFAULT_HEIGHT = 60;
 
 // Note/NoteRect const
 export const NOTE_WIDTH = 8;
+export const DEFAULT_TRACK_ID = 0;
 export const NOTE_ID_KEY = "__piano_uid__";
+export const NOTE_PROP_TRACK = 'trackId';
 export const NOTE_PROP_LABEL = 'label';
 export const NOTE_PROP_REMOVABLE = 'removable';
 export interface iNoteParam {
   tick: number // change later?
-  trackId: number
+  trackId?: number
   duration?: number
   fill?: string
   label?: string

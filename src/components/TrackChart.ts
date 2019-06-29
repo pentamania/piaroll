@@ -7,6 +7,7 @@ import {
   MARKER_COLOR,
   NOTE_PROP_LABEL,
   NOTE_PROP_REMOVABLE,
+  NOTE_PROP_TRACK,
   iNoteParam,
   EVENT_POINT_START_CHART,
   EVENT_FAIL_NOTE_REMOVE,
@@ -249,18 +250,18 @@ export class TrackChart extends AbstractChart {
             return a.tick < b.tick ? a : b;
           });
           // console.log("star", standard);
-          const standardTrackId = standard.trackId;
+          const standardTrackId = standard[NOTE_PROP_TRACK];
           const standardTick = standard.tick;
           cloneNotes.forEach((noteParam)=> {
             if (noteParam === standard) {
               noteParam.tick = this._currentSelectedTick;
-              noteParam.trackId = this._currentSelectedTrackId;
+              noteParam[NOTE_PROP_TRACK] = this._currentSelectedTrackId;
             } else {
               noteParam.tick += this._currentSelectedTick - standardTick;
-              noteParam.trackId = this._currentSelectedTrackId - (standardTrackId - noteParam.trackId);
+              noteParam[NOTE_PROP_TRACK] = this._currentSelectedTrackId - (standardTrackId - noteParam[NOTE_PROP_TRACK]);
             };
             noteParam.selected = true;
-            if (0 <= noteParam.trackId && noteParam.trackId <= this.maxTrackId) {
+            if (0 <= noteParam[NOTE_PROP_TRACK] && noteParam[NOTE_PROP_TRACK] <= this.maxTrackId) {
               this._model.addNote(noteParam)
             }
           });
@@ -271,7 +272,7 @@ export class TrackChart extends AbstractChart {
         }
       }
       if (e.key === 'Backspace' || e.key === 'Delete') {
-        // 選択したノーツを消去: 
+        // 選択したノーツを消去:
         // 配列操作を伴うため、一度に行う
         let removedIds = [];
         const model = this._model;
@@ -303,8 +304,8 @@ export class TrackChart extends AbstractChart {
   addNoteRect(noteParam) {
     const chartSvg = this._chartSvg
     const noteRect = new NoteRect(
-      noteParam.fill, 
-      noteParam.extendable, 
+      noteParam.fill,
+      noteParam.extendable,
       noteParam[NOTE_PROP_REMOVABLE]
     );
     let inputLabelEventHandler;
@@ -327,8 +328,8 @@ export class TrackChart extends AbstractChart {
       };
       noteRect.inputElement.addEventListener('input', inputLabelEventHandler);
     }
-    noteRect.y = noteParam.trackId * this._state.trackHeight;
-    noteRect.trackId = noteParam.trackId;
+    noteRect.y = noteParam[NOTE_PROP_TRACK] * this._state.trackHeight;
+    noteRect.trackId = noteParam[NOTE_PROP_TRACK];
     noteRect.height = this._state.trackHeight;
 
     /* note move by drag */
@@ -479,7 +480,7 @@ export class TrackChart extends AbstractChart {
       noteRect.removeEventListener('mousedown', onDragStart);
       document.removeEventListener('mousemove', onDragMove);
       document.removeEventListener('mouseup', onDragEnd);
-      
+
       if (noteRect.extensionElement != null) noteRect.extensionElement.removeEventListener('mousedown', onStartNoteExtend);
       if (inputLabelEventHandler != null) noteRect.inputElement.removeEventListener('input', inputLabelEventHandler);
       chartSvg.removeEventListener('mousemove', onMoveNoteExtend);
@@ -511,7 +512,7 @@ export class TrackChart extends AbstractChart {
           noteRect.duration = null;
         }
         break;
-      case "trackId":
+      case NOTE_PROP_TRACK:
         noteRect.y = changedPropValue * this._state.trackHeight;
         noteRect.trackId = changedPropValue;
         break;
