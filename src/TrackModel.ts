@@ -95,17 +95,17 @@ export class TrackModel extends EventEmitter {
       return note[NOTE_ID_KEY] === id;
     });
   }
-  
+
   setNoteById(id: number, prop: string, val: any) {
     var target = this._data.notes.find((note)=> {
       return note[NOTE_ID_KEY] === id;
     });
-    // console.log(prop, target);
-
-    if (target) {
+    
+    if (target && target[prop] !== val) {
       target[prop] = val;
       this.dispatchChange();
       this.emit(EVENT_EDIT_NOTE, target);
+      // console.log(prop, target);
     }
   }
 
