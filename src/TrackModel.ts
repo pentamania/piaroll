@@ -90,6 +90,12 @@ export class TrackModel extends EventEmitter {
   //   // this.notes[index][prop] = val;
   // }
 
+  getNoteById(id: number) {
+    return this._data.notes.find((note)=> {
+      return note[NOTE_ID_KEY] === id;
+    });
+  }
+  
   setNoteById(id: number, prop: string, val: any) {
     var target = this._data.notes.find((note)=> {
       return note[NOTE_ID_KEY] === id;

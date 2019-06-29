@@ -6,8 +6,10 @@ import {
   TRACK_DEFAULT_STATE as defaultState,
   MARKER_COLOR,
   NOTE_PROP_LABEL,
+  NOTE_PROP_REMOVABLE,
   iNoteParam,
   EVENT_POINT_START_CHART,
+  EVENT_FAIL_NOTE_REMOVE,
 } from "../config";
 import { AbstractChart } from "./abstracts/AbstractChart";
 import { NoteRect } from "./NoteRect";
@@ -269,16 +271,21 @@ export class TrackChart extends AbstractChart {
         }
       }
       if (e.key === 'Backspace' || e.key === 'Delete') {
-        // 選択したノーツを消去
+        // 選択したノーツを消去: 
+        // 配列操作を伴うため、一度に行う
         let removedIds = [];
+        const model = this._model;
         this._noteRects.forEach((rect) => {
           if (rect.selected) {
-            // console.warn('bss remove indx', rect.id);
-            removedIds.push(rect.id);
-            // this._model.removeNoteById(rect.id); // 即実行だとthis._noteRectsがmutated
+            if (rect.removable) {
+              // console.warn('bss remove indx', rect.id);
+              removedIds.push(rect.id);
+            } else {
+              model.emit(EVENT_FAIL_NOTE_REMOVE, model.getNoteById(rect.id));
+            }
           };
         })
-        this._model.removeNoteById(removedIds);
+        model.removeNoteById(removedIds);
       }
     })
 
@@ -295,7 +302,11 @@ export class TrackChart extends AbstractChart {
 
   addNoteRect(noteParam) {
     const chartSvg = this._chartSvg
-    const noteRect = new NoteRect(noteParam.fill, noteParam.extendable);
+    const noteRect = new NoteRect(
+      noteParam.fill, 
+      noteParam.extendable, 
+      noteParam[NOTE_PROP_REMOVABLE]
+    );
     let inputLabelEventHandler;
     // console.log(noteParam, noteParam[NOTE_ID_KEY]);
 

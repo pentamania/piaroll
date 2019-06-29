@@ -6,14 +6,16 @@ const TRACK_DEFAULT_HEIGHT = 60;
 export const NOTE_WIDTH = 8;
 export const NOTE_ID_KEY = "__piano_uid__";
 export const NOTE_PROP_LABEL = 'label';
+export const NOTE_PROP_REMOVABLE = 'removable';
 export interface iNoteParam {
+  tick: number // change later?
   trackId: number
-  tick: number // change later
   duration?: number
   fill?: string
-  extendable?: boolean|string
-  selected?: boolean
   label?: string
+  selected?: boolean
+  extendable?: boolean|string
+  removable?: boolean
 }
 
 // chart/track const
@@ -50,4 +52,5 @@ export const EVENT_POINT_START_CHART = 'onpointchart';
 export const EVENT_ADD_NOTE = 'addnote';
 export const EVENT_EDIT_NOTE = 'editnote';
 export const EVENT_REMOVE_NOTE = 'removenote';
+export const EVENT_FAIL_NOTE_REMOVE = 'failnoteremoval';
 

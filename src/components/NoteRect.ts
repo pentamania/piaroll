@@ -24,6 +24,7 @@ export class NoteRect extends EventEmitter {
   private _activeStrokeStyle = ACTIVE_STROKE_STYLE
   private _fillStyle
   private _selected = false
+  private _removable = true
   private _id: number
   duration: number
   tempStartX: number
@@ -81,6 +82,8 @@ export class NoteRect extends EventEmitter {
       this._rectElement.setAttribute('stroke', null);
     }
   }
+  get removable() { return this._removable; }
+  // set removable(v: boolean) { this._removable = v; }
   get tick() { return this._tick; }
   set tick(v: number) { this._tick = v; }
   get trackId() { return this._trackId; }
@@ -117,7 +120,8 @@ export class NoteRect extends EventEmitter {
    */
   constructor(
     color: string = DEFAULT_FILL,
-    extendable:boolean|string = true
+    extendable:boolean|string = true,
+    removable:boolean = true
   ) {
     super();
 
@@ -138,6 +142,9 @@ export class NoteRect extends EventEmitter {
       this.extensionElement.setAttribute('width', String(EXTENSION_RECT_WIDTH));
       this.extensionElement.setAttribute('fill', fill);
       this._containerElement.appendChild(this.extensionElement);
+    }
+    if (removable != null) {
+      this._removable = removable;
     }
 
     this._debugTextElement = document.createElementNS(SVG_NAMESPACE, "text")
