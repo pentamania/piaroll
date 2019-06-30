@@ -9,6 +9,7 @@ export const NOTE_ID_KEY = "__piano_uid__";
 export const NOTE_PROP_TRACK = 'trackId';
 export const NOTE_PROP_LABEL = 'label';
 export const NOTE_PROP_REMOVABLE = 'removable';
+export const NOTE_PROP_SHIFTABLE = 'shiftable';
 export interface iNoteParam {
   tick: number // change later?
   trackId?: number
@@ -18,6 +19,7 @@ export interface iNoteParam {
   selected?: boolean
   extendable?: boolean|string
   removable?: boolean
+  shiftable?: boolean
 }
 
 // chart/track const

@@ -25,6 +25,7 @@ export class NoteRect extends EventEmitter {
   private _fillStyle
   private _selected = false
   private _removable = true
+  private _shiftable = true
   private _id: number
   duration: number
   tempStartX: number
@@ -67,9 +68,9 @@ export class NoteRect extends EventEmitter {
   set height(v) {
     this._height = v;
     this._rectElement.setAttribute("height", String(v));
-    if (this.extensionElement != null) 
+    if (this.extensionElement != null)
       this.extensionElement.setAttribute('height', String(v));
-    if (this._foreignInputWrapper) 
+    if (this._foreignInputWrapper)
       this._foreignInputWrapper.setAttribute('y', String((v - INPUT_ELEMENT_HEIGHT)*0.5));
   }
   get selected() { return this._selected; }
@@ -84,6 +85,7 @@ export class NoteRect extends EventEmitter {
   }
   get removable() { return this._removable; }
   // set removable(v: boolean) { this._removable = v; }
+  get shiftable() { return this._shiftable; }
   get tick() { return this._tick; }
   set tick(v: number) { this._tick = v; }
   get trackId() { return this._trackId; }
@@ -120,8 +122,9 @@ export class NoteRect extends EventEmitter {
    */
   constructor(
     color: string = DEFAULT_FILL,
-    extendable:boolean|string = true,
-    removable:boolean = true
+    extendable: boolean|string = true,
+    removable: boolean = true,
+    shiftable: boolean = true,
   ) {
     super();
 
@@ -143,9 +146,8 @@ export class NoteRect extends EventEmitter {
       this.extensionElement.setAttribute('fill', fill);
       this._containerElement.appendChild(this.extensionElement);
     }
-    if (removable != null) {
-      this._removable = removable;
-    }
+    if (removable != null) this._removable = removable;
+    if (shiftable != null) this._shiftable = shiftable;
 
     this._debugTextElement = document.createElementNS(SVG_NAMESPACE, "text")
     this._debugTextElement.setAttribute('y', "16");

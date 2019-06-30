@@ -11,6 +11,7 @@ import {
   iNoteParam,
   EVENT_POINT_START_CHART,
   EVENT_FAIL_NOTE_REMOVE,
+  NOTE_PROP_SHIFTABLE,
 } from "../config";
 import { AbstractChart } from "./abstracts/AbstractChart";
 import { NoteRect } from "./NoteRect";
@@ -306,7 +307,8 @@ export class TrackChart extends AbstractChart {
     const noteRect = new NoteRect(
       noteParam.fill,
       noteParam.extendable,
-      noteParam[NOTE_PROP_REMOVABLE]
+      noteParam[NOTE_PROP_REMOVABLE],
+      noteParam[NOTE_PROP_SHIFTABLE]
     );
     let inputLabelEventHandler;
     // console.log(noteParam, noteParam[NOTE_ID_KEY]);
@@ -391,12 +393,13 @@ export class TrackChart extends AbstractChart {
       if (!noteXExceedingRangeExists) {
         /* use current noteRect as standard */
         const standardNoteDestX = noteRect.tempStartX + pointerDeltaX;
-        noteRect.x = (this.isSnapping) ? this.snapToDiv(standardNoteDestX) : standardNoteDestX;
-        const standardNoteDeltaX = noteRect.x - noteRect.tempStartX;
+        const standardNoteActualDestX = (this.isSnapping) ? this.snapToDiv(standardNoteDestX) : standardNoteDestX;
+        // noteRect.x = (this.isSnapping) ? this.snapToDiv(standardNoteDestX) : standardNoteDestX;
+        const standardNoteDeltaX = standardNoteActualDestX - noteRect.tempStartX;
         xMovingRects.forEach((d)=> {
           const targetNoteRect = this._noteRects[d.index];
+          if (!targetNoteRect.shiftable) return;
           targetNoteRect.x = targetNoteRect.tempStartX + standardNoteDeltaX;
-          // targetNoteRect.x = this.snapToDiv(d.dest);
         });
       }
 
@@ -420,6 +423,7 @@ export class TrackChart extends AbstractChart {
       if (!noteYExceedingRangeExists) {
         yMovingRects.forEach((d) => {
           const targetNoteRect = this._noteRects[d.index];
+          if (!targetNoteRect.shiftable) return;
           targetNoteRect.y = (targetNoteRect.trackId + trackIdDelta) * this._state.trackHeight;
           // targetNoteRect.y = this.yToTrackId(d.dest) * this._state.trackHeight;
         });
@@ -433,8 +437,8 @@ export class TrackChart extends AbstractChart {
       // 変更を通知
       this._noteRects.forEach((nRect) => {
         if (nRect.selected) {
-          this._model.setNoteById(nRect.id, "tick", this.xToTick(nRect.x));
-          this._model.setNoteById(nRect.id, "trackId", this.yToTrackId(nRect.y));
+          // this._model.setNoteById(nRect.id, "tick", this.xToTick(nRect.x));
+          this._model.setNoteById(nRect.id, NOTE_PROP_TRACK, this.yToTrackId(nRect.y));
         }
       })
       moveStartX = 0; // reset
