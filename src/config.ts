@@ -50,6 +50,10 @@ export const TRACK_DEFAULT_STATE = Object.freeze({
   tracks: []
 })
 export const MARKER_COLOR = "rgb(255, 50, 5)";
+export const HEADER_DEFAULT_STATE = Object.freeze({
+  trackHeight: TRACK_DEFAULT_HEIGHT,
+  tracks: []
+})
 
 // events
 export const EVENT_POINT_START_CHART = 'onpointchart';

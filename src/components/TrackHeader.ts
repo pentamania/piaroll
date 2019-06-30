@@ -1,6 +1,9 @@
-import { createDiv } from "../utils";
-import { shallowDiff, arrayItemSimpleDiff } from "../utils";
+import { createDiv, shallowDiff, arrayItemSimpleDiff, cloneObj } from "../utils";
+import { HEADER_DEFAULT_STATE as defaultState } from "../config";
 const KEY_PROP = 'key';
+const initialState = {
+  tracks: [],
+}
 
 /**
  * header HTML component
@@ -81,10 +84,7 @@ class HeaderComponent {
 export class TrackHeader {
 
   container: HTMLDivElement
-  private _state = {
-    tracks: [],
-    trackHeight: 60,
-  };
+  private _state = cloneObj(initialState);
   private _headers: HeaderComponent[] = []
 
   constructor() {
@@ -99,6 +99,7 @@ export class TrackHeader {
   // }
 
   render(newState) {
+    newState = Object.assign({}, defaultState, newState);
     const paramDiff = shallowDiff(this._state, newState);
     const trackDiff = arrayItemSimpleDiff(this._state.tracks, newState.tracks, KEY_PROP)
 
