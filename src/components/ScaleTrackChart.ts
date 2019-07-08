@@ -2,6 +2,9 @@ import {
   SVG_NAMESPACE,
   TRACK_DEFAULT_STATE as defaultState,
   MARKER_COLOR,
+  CSS_CLASS_SCALE_TRACK_CHART,
+  CSS_CLASS_SCALE_TRACK_NUMLABEL,
+  CSS_CLASS_SCALE_TRACK_MARKER,
  } from "../config";
 import { shallowDiff } from "../utils";
 import { SvgText } from "./SvgText";
@@ -36,11 +39,13 @@ export class ScaleTrackChart extends AbstractChart {
     chartSvg.style.background = DEFAULT_SCALE_BACKGROUND_COLOR;
     chartSvg.style.borderBottom = 'solid 1px gray';
     chartSvg.style.cursor = 'pointer';
+    chartSvg.setAttribute('class', `${CSS_CLASS_SCALE_TRACK_CHART}`);
 
     // marker
     const marker = this._markerSvg = document.createElementNS(SVG_NAMESPACE, "polygon");
     marker.setAttribute('points', POINTS);
     marker.setAttribute('fill', MARKER_COLOR);
+    marker.setAttribute('class', `${CSS_CLASS_SCALE_TRACK_MARKER}`);
     chartSvg.appendChild(marker);
 
     // user event
@@ -70,6 +75,10 @@ export class ScaleTrackChart extends AbstractChart {
       numLabel.x = i * state.barWidth;
       numLabel.text = String(i);
       numLabel.append(this._chartSvg);
+      numLabel.classList = [
+        CSS_CLASS_SCALE_TRACK_NUMLABEL,
+        `${CSS_CLASS_SCALE_TRACK_NUMLABEL} ${CSS_CLASS_SCALE_TRACK_NUMLABEL}-${i}`,
+      ];
     }
   }
 

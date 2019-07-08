@@ -12,6 +12,10 @@ import {
   EVENT_POINT_START_CHART,
   EVENT_FAIL_NOTE_REMOVE,
   NOTE_PROP_SHIFTABLE,
+  CSS_CLASS_TRACK_CHART,
+  CSS_CLASS_NOTE_RECT,
+  CSS_CLASS_TRACK_CURRENT_LINE,
+  CSS_CLASS_TRACK_BRUSH_RECT,
 } from "../config";
 import { AbstractChart } from "./abstracts/AbstractChart";
 import { NoteRect } from "./NoteRect";
@@ -20,6 +24,7 @@ import { TrackModel } from "../TrackModel";
 import {setTrackBackground} from "../drawBackground";
 import { cloneObj, shallowDiff, arrayItemSimpleDiff, testRectRect } from "../utils";
 import { KeyState as globalKeyState } from "../KeyState";
+
 const DEFAULT_NOTE_WIDTH = 16;
 const SELECTION_MIN_THRESHOLD = 5;
 
@@ -61,11 +66,9 @@ export class TrackChart extends AbstractChart {
     this._isActive = v;
     // console.log('set active', v);
   }
-
+  get maxTrackId() { return this._state.tracks.length - 1; }
   private _model: TrackModel
   set model(v: TrackModel) { this._model = v; }
-
-  get maxTrackId() { return this._state.tracks.length-1; }
 
   constructor(app) {
     super();
@@ -76,6 +79,7 @@ export class TrackChart extends AbstractChart {
     chartSvg.style.boxSizing = 'border-box';
     chartSvg.style.display = 'block';
     chartSvg.style.borderBottom = 'solid 1px gray';
+    chartSvg.setAttribute('class', `${CSS_CLASS_TRACK_CHART}`);
 
     // svg layers
     this._svgNoteLayer = document.createElementNS(SVG_NAMESPACE, "g");
@@ -89,10 +93,11 @@ export class TrackChart extends AbstractChart {
     line.setAttribute('height', "200");
     line.setAttribute('y', "0");
     line.setAttribute('fill', MARKER_COLOR);
+    chartSvg.setAttribute('class', `${CSS_CLASS_TRACK_CURRENT_LINE}`);
     this._svgLineLayer.appendChild(line);
 
     /* mouse/touch event */
-    chartSvg.addEventListener('mousedown', (e)=> {
+    chartSvg.addEventListener('mousedown', ()=> {
       if (!this._isActive) this._app.setActiveChart(this);
     }, true);
 
@@ -123,6 +128,7 @@ export class TrackChart extends AbstractChart {
       brush.width = 0;
       brush.height = 0;
       brush.visible = true;
+      brush.classList = CSS_CLASS_TRACK_BRUSH_RECT;
     });
 
     chartSvg.addEventListener('mousemove', (e) => {
@@ -333,6 +339,10 @@ export class TrackChart extends AbstractChart {
     noteRect.y = noteParam[NOTE_PROP_TRACK] * this._state.trackHeight;
     noteRect.trackId = noteParam[NOTE_PROP_TRACK];
     noteRect.height = this._state.trackHeight;
+    noteRect.classList = [
+      `${CSS_CLASS_NOTE_RECT}`,
+      `${CSS_CLASS_NOTE_RECT}-${noteRect.id}`
+    ];
 
     /* note move by drag */
     let moveStartX = 0;
@@ -480,7 +490,7 @@ export class TrackChart extends AbstractChart {
     chartSvg.addEventListener('mouseup', onEndNoteExtend);
 
     // unlease eventlistener after removal
-    noteRect.once('removed', (e) => {
+    noteRect.once('removed', () => {
       noteRect.removeEventListener('mousedown', onDragStart);
       document.removeEventListener('mousemove', onDragMove);
       document.removeEventListener('mouseup', onDragEnd);

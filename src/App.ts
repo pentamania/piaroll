@@ -4,6 +4,7 @@ import { ScaleTrackChart } from "./components/ScaleTrackChart";
 import { TrackHeader } from "./components/TrackHeader";
 import { TrackModel } from "./TrackModel";
 import { createDiv } from "./utils";
+import { CSS_CLASS_APP_WRAPPER, CSS_CLASS_APP_TRACK_WRAPPER, CSS_CLASS_APP_SCROLL_BAR } from './config';
 const SCROLL_BAR_SIZE = 17;
 
 interface AppParam {
@@ -75,7 +76,8 @@ export class App extends EventEmitter {
     // app-wrapper
     const wrapper = createDiv();
     wrapper.style.width = params.width + "px";
-    wrapper.style.background = "gray";
+    // wrapper.style.background = "gray"; // todo
+    wrapper.className = CSS_CLASS_APP_WRAPPER;
     this.root.appendChild(wrapper);
 
     // track-wrapper
@@ -84,9 +86,10 @@ export class App extends EventEmitter {
     // trackWrapper.style.background = "limegreen"; // チャート長さが足りないときの背景色
     // trackWrapper.style.width = params.width + "px"; // チャート長さが足りないときは？
     trackWrapper.style.position = "relative";
+    trackWrapper.className = CSS_CLASS_APP_TRACK_WRAPPER;
     wrapper.appendChild(trackWrapper);
 
-    // header
+    // header-container
     const headerContainer = this.headerContainer = createDiv();
     // headerContainer.style.width = cssLeft;
     headerContainer.style.margin = "0px";
@@ -94,7 +97,7 @@ export class App extends EventEmitter {
     headerContainer.style.textAlign = "center";
     trackWrapper.appendChild(this.headerContainer)
 
-    // chart
+    // chart-container
     const chartContainer = this.chartContainer = createDiv();
     chartContainer.style.position = "absolute";
     // chartContainer.style.left = cssLeft;
@@ -109,13 +112,13 @@ export class App extends EventEmitter {
     chartInner.style.width = `calc(100% + ${SCROLL_BAR_SIZE}px)`; // hide v-scroll bar
     chartContainer.appendChild(chartInner);
 
-
     if (!params.hideHorizontalScrollBar) {
       // 水平ScrollBarエリア用に領域確保
       const scrollBarContainer = document.createElement("div");
       scrollBarContainer.style.width = "100%";
       scrollBarContainer.style.height = `${SCROLL_BAR_SIZE}px`;
       scrollBarContainer.style.background = "yellow";
+      scrollBarContainer.className = CSS_CLASS_APP_SCROLL_BAR;
       wrapper.appendChild(scrollBarContainer);
     }
 

@@ -49,6 +49,15 @@ export class AbstractSvgComponent extends EventEmitter {
   }
   get parent() { return this.element.parentElement }
 
+  set classList(v: string | string[]) {
+    if (typeof v === 'string') {
+      this.element.setAttribute('class', v);
+    } else {
+      const listString: string = v.join(' ');
+      this.element.setAttribute('class', listString);
+    }
+  }
+
   append(parent) {
     parent.appendChild(this.element);
     return this;

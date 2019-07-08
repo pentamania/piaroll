@@ -1,4 +1,4 @@
-import {SVG_NAMESPACE} from "../config";
+import {SVG_NAMESPACE, CSS_CLASS_NOTE_RECT_EXTENSION_RECT, CSS_CLASS_NOTE_RECT_INPUT_LABEL} from "../config";
 import EventEmitter from 'wolfy87-eventemitter';
 const DEFAULT_FILL = "#FE7A8E";
 const STROKE_WIDTH = 2;
@@ -106,7 +106,7 @@ export class NoteRect extends EventEmitter {
 
       var input = this.inputElement = document.createElement('input');
       this.inputElement.type = (typeof v === 'number') ? 'number' : 'text';
-      // スタイリング：CSSクラス付与でカスタムできるようにする？
+      input.className = CSS_CLASS_NOTE_RECT_INPUT_LABEL;
       input.style.position = "absolute";
       input.style.padding = "0";
       input.style.border = "none";
@@ -115,6 +115,14 @@ export class NoteRect extends EventEmitter {
       fi.appendChild(this.inputElement)
     }
     this.inputElement.value = String(v);
+  }
+  set classList(v: string|string[]) {
+    if (typeof v === 'string') {
+      this._rectElement.setAttribute('class', v);
+    } else{
+      const listString: string = v.join(' ');
+      this._rectElement.setAttribute('class', listString);
+    }
   }
 
   /**
@@ -141,14 +149,16 @@ export class NoteRect extends EventEmitter {
     // extension-rect on edge
     if (extendable) {
       const fill = (typeof extendable === "string") ? extendable : EXTENSTION_RECT_FILL;
-      this.extensionElement = document.createElementNS(SVG_NAMESPACE, "rect");
-      this.extensionElement.setAttribute('width', String(EXTENSION_RECT_WIDTH));
-      this.extensionElement.setAttribute('fill', fill);
-      this._containerElement.appendChild(this.extensionElement);
+      const extel = this.extensionElement = document.createElementNS(SVG_NAMESPACE, "rect");
+      extel.setAttribute('width', String(EXTENSION_RECT_WIDTH));
+      extel.setAttribute('fill', fill);
+      extel.setAttribute('style', CSS_CLASS_NOTE_RECT_EXTENSION_RECT);
+      this._containerElement.appendChild(extel);
     }
     if (removable != null) this._removable = removable;
     if (shiftable != null) this._shiftable = shiftable;
 
+    // remove later?
     this._debugTextElement = document.createElementNS(SVG_NAMESPACE, "text")
     this._debugTextElement.setAttribute('y', "16");
     this._containerElement.appendChild(this._debugTextElement);

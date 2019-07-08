@@ -1,5 +1,5 @@
 import { createDiv, shallowDiff, arrayItemSimpleDiff, cloneObj } from "../utils";
-import { HEADER_DEFAULT_STATE as defaultState } from "../config";
+import { HEADER_DEFAULT_STATE as defaultState, CSS_CLASS_TRACK_HEADER, CSS_CLASS_TRACK_HEADER_BUTTON, CSS_CLASS_TRACK_HEADER_LABEL } from "../config";
 const KEY_PROP = 'key';
 const initialState = {
   tracks: [],
@@ -48,6 +48,7 @@ class HeaderComponent {
     el.style.borderBottom = "1px solid gray";
     el.style.borderTop = "1px solid gray";
     el.style.background = "#6B6B70";
+    el.className = CSS_CLASS_TRACK_HEADER;
 
     // mute button area: WIP
     if (addButton) {
@@ -62,10 +63,12 @@ class HeaderComponent {
         // TODO: dispatch isMute prop change
         this.active = (this.active) ? false : true;
       })
+      muteButton.className = CSS_CLASS_TRACK_HEADER_BUTTON;
       el.appendChild(muteButton);
     }
 
     var la = this._labelArea = document.createElement('span');
+    la.className = CSS_CLASS_TRACK_HEADER_LABEL;
     el.appendChild(la);
   }
 
