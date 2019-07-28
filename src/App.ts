@@ -4,16 +4,7 @@ import { ScaleTrackChart } from "./components/ScaleTrackChart";
 import { TrackHeader } from "./components/TrackHeader";
 import { TrackModel } from "./TrackModel";
 import { createDiv } from "./utils";
-import { CSS_CLASS_APP_WRAPPER, CSS_CLASS_APP_TRACK_WRAPPER, CSS_CLASS_APP_SCROLL_BAR } from './config';
-const SCROLL_BAR_SIZE = 17;
-
-interface AppParam {
-  root: string
-  width: number
-  headerWidth: number
-  trackHeight: number
-  hideHorizontalScrollBar: boolean
-}
+import { CSS_CLASS_APP_WRAPPER, CSS_CLASS_APP_TRACK_WRAPPER, CSS_CLASS_APP_SCROLL_BAR, EVENT_ADD_NOTE, EVENT_CHANGE_CURRENT, SCROLL_BAR_SIZE, AppParam } from './config';
 
 /**
  * @class App
@@ -59,7 +50,7 @@ export class App extends EventEmitter {
     this._trackModels.forEach((tm) => {
       tm.currentTick = v;
     });
-    this.emit('changeCurrentTick', v);
+    this.emit(EVENT_CHANGE_CURRENT, v);
   }
 
   constructor(params: AppParam) {
@@ -117,7 +108,7 @@ export class App extends EventEmitter {
       const scrollBarContainer = document.createElement("div");
       scrollBarContainer.style.width = "100%";
       scrollBarContainer.style.height = `${SCROLL_BAR_SIZE}px`;
-      scrollBarContainer.style.background = "yellow";
+      // scrollBarContainer.style.background = "yellow";
       scrollBarContainer.className = CSS_CLASS_APP_SCROLL_BAR;
       wrapper.appendChild(scrollBarContainer);
     }
@@ -131,7 +122,7 @@ export class App extends EventEmitter {
    * @param data
    * @returns {TrackModel}
    */
-  addScaleTrack(data) {
+  addScaleTrack(data): TrackModel {
     /* Model */
     const scaleTrackModel = new TrackModel(data);
     const dataClone = scaleTrackModel.getData();
@@ -160,7 +151,7 @@ export class App extends EventEmitter {
    * @param data
    * @returns {TrackModel}
    */
-  addTrack(data) {
+  addTrack(data): TrackModel {
     /* Model:　変化したらrenderを発火 */
     const trackModel = new TrackModel(data);
     const dataClone = trackModel.getData();

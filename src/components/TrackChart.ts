@@ -1,42 +1,13 @@
 // import EventEmitter from "EventEmitter";
 // import deef from "deep-diff";
-import {
-  SVG_NAMESPACE,
-  NOTE_ID_KEY,
-  TRACK_DEFAULT_STATE as defaultState,
-  MARKER_COLOR,
-  NOTE_PROP_LABEL,
-  NOTE_PROP_REMOVABLE,
-  NOTE_PROP_TRACK,
-  iNoteParam,
-  EVENT_POINT_START_CHART,
-  EVENT_FAIL_NOTE_REMOVE,
-  NOTE_PROP_SHIFTABLE,
-  CSS_CLASS_TRACK_CHART,
-  CSS_CLASS_NOTE_RECT,
-  CSS_CLASS_TRACK_CURRENT_LINE,
-  CSS_CLASS_TRACK_BRUSH_RECT,
-} from "../config";
-import { AbstractChart } from "./abstracts/AbstractChart";
-import { NoteRect } from "./NoteRect";
-import { BrushRect } from "./BrushRect";
-import { TrackModel } from "../TrackModel";
-import {setTrackBackground} from "../drawBackground";
-import { cloneObj, shallowDiff, arrayItemSimpleDiff, testRectRect } from "../utils";
+import { CSS_CLASS_NOTE_RECT, CSS_CLASS_TRACK_BRUSH_RECT, CSS_CLASS_TRACK_CHART, CSS_CLASS_TRACK_CURRENT_LINE, EVENT_FAIL_NOTE_REMOVE, EVENT_POINT_START_CHART, iNoteParam, MARKER_COLOR, NOTE_ID_KEY, NOTE_PROP_LABEL, NOTE_PROP_REMOVABLE, NOTE_PROP_SHIFTABLE, NOTE_PROP_TRACK, SVG_NAMESPACE, TRACK_DEFAULT_STATE as defaultState, _EVENT_NOTERECT_REMOVED, NOTE_PROP_SELECTED, MARKER_LINE_DEFAULT_WIDTH, NOTE_PROP_DURATION, NOTE_PROP_START, TRACK_PROP_BAR_NUM, TRACK_PROP_BAR_WIDTH, TRACK_PROP_HEIGHT, TRACK_PROP_CURRENT, TRACK_PROP_DIV_NUM, TRACK_PROP_RESOLUTION, TrackState, SELECTION_MIN_THRESHOLD, NOTE_DEFAULT_WIDTH } from "../config";
+import { setTrackBackground } from "../drawBackground";
 import { KeyState as globalKeyState } from "../KeyState";
-
-const DEFAULT_NOTE_WIDTH = 16;
-const SELECTION_MIN_THRESHOLD = 5;
-
-interface State {
-  barNum?: number
-  barWidth?: number
-  // trackNum?: number
-  trackHeight?: number
-  currentTick?: number
-  notes: iNoteParam[]
-  tracks: []
-}
+import { TrackModel } from "../TrackModel";
+import { arrayItemSimpleDiff, cloneObj, shallowDiff, testRectRect } from "../utils";
+import { AbstractChart } from "./abstracts/AbstractChart";
+import { BrushRect } from "./BrushRect";
+import { NoteRect } from "./NoteRect";
 
 /**
  * @class TrackComponent
@@ -47,7 +18,7 @@ export class TrackChart extends AbstractChart {
   private _currentLineRect: SVGRectElement
 
   private _divSnapUnit: number
-  private _state: State = { notes:[], tracks:[] }
+  private _state: TrackState = { notes:[], tracks:[] }
   private _noteRects:NoteRect[] = []
   // private _currentX: number = 0
   private _currentSelectedTick: number = 0
@@ -89,9 +60,7 @@ export class TrackChart extends AbstractChart {
 
     // current line
     var line = this._currentLineRect = document.createElementNS(SVG_NAMESPACE, "rect");
-    line.setAttribute('width', "3");
-    line.setAttribute('height', "200");
-    line.setAttribute('y', "0");
+    line.setAttribute('width', String(MARKER_LINE_DEFAULT_WIDTH));
     line.setAttribute('fill', MARKER_COLOR);
     chartSvg.setAttribute('class', `${CSS_CLASS_TRACK_CURRENT_LINE}`);
     this._svgLineLayer.appendChild(line);
@@ -209,7 +178,7 @@ export class TrackChart extends AbstractChart {
         /* select noteRect within range */
         this._noteRects.forEach((nRect) => {
           if (testRectRect(selectionRect, nRect)) {
-            this._model.setNoteById(nRect.id, 'selected', true);
+            this._model.setNoteById(nRect.id, NOTE_PROP_SELECTED, true);
           }
         })
       }
@@ -323,7 +292,7 @@ export class TrackChart extends AbstractChart {
     noteRect.id = noteParam[NOTE_ID_KEY];
     noteRect.x = this.tickToX(noteParam.tick);
     noteRect.tick = noteParam.tick;
-    noteRect.width = DEFAULT_NOTE_WIDTH;
+    noteRect.width = NOTE_DEFAULT_WIDTH;
     if (noteParam.duration) {
       noteRect.width = this.tickToX(noteParam.duration);
       noteRect.duration = noteParam.duration;
@@ -361,11 +330,8 @@ export class TrackChart extends AbstractChart {
           });
         }
         // ノーツ選択状態にする
-        this._model.setNoteById(noteParam[NOTE_ID_KEY], "selected", true);
+        this._model.setNoteById(noteParam[NOTE_ID_KEY], NOTE_PROP_SELECTED, true);
       }
-      // else {
-      //   this._model.setNoteById(noteParam[NOTE_ID_KEY], "selected", false);
-      // }
 
       moveStartX = e.clientX;
       // moveStartY = e.clientY;
@@ -472,7 +438,7 @@ export class TrackChart extends AbstractChart {
       e.preventDefault(); // for smooth move
       let destWidth = startWidth + (e.clientX - dragStartX);
       destWidth = this.snapToDiv(destWidth);
-      if (destWidth < DEFAULT_NOTE_WIDTH) return;
+      if (destWidth < NOTE_DEFAULT_WIDTH) return;
       noteRect.width = destWidth;
     }
     const onEndNoteExtend = (e) => {
@@ -481,8 +447,7 @@ export class TrackChart extends AbstractChart {
       e.preventDefault(); // for smooth move
       const duration = this.xToTick(noteRect.width);
       noteRect.duration = duration;
-      // this._model.setNote(index, "duration", duration);
-      this._model.setNoteById(noteRect.id, "duration", duration); // notify change
+      this._model.setNoteById(noteRect.id, NOTE_PROP_DURATION, duration); // notify change
       dragStartX = 0; // reset
     }
     if (noteRect.extensionElement != null) noteRect.extensionElement.addEventListener('mousedown', onStartNoteExtend);
@@ -490,7 +455,7 @@ export class TrackChart extends AbstractChart {
     chartSvg.addEventListener('mouseup', onEndNoteExtend);
 
     // unlease eventlistener after removal
-    noteRect.once('removed', () => {
+    noteRect.once(_EVENT_NOTERECT_REMOVED, () => {
       noteRect.removeEventListener('mousedown', onDragStart);
       document.removeEventListener('mousemove', onDragMove);
       document.removeEventListener('mouseup', onDragEnd);
@@ -512,17 +477,17 @@ export class TrackChart extends AbstractChart {
     });
 
     switch (changedPropKey) {
-      case "tick": // TODO: change
+      case NOTE_PROP_START:
         noteRect.x = this.tickToX(changedPropValue);
         noteRect.tick = changedPropValue;
         break;
-      case "duration":
+      case NOTE_PROP_DURATION:
         if (changedPropValue != null) {
           noteRect.width = this.tickToX(changedPropValue);
           noteRect.duration = changedPropValue;
         } else {
-          // prop削除
-          noteRect.width = DEFAULT_NOTE_WIDTH;
+          // null:prop削除
+          noteRect.width = NOTE_DEFAULT_WIDTH;
           noteRect.duration = null;
         }
         break;
@@ -530,7 +495,7 @@ export class TrackChart extends AbstractChart {
         noteRect.y = changedPropValue * this._state.trackHeight;
         noteRect.trackId = changedPropValue;
         break;
-      case "selected":
+      case NOTE_PROP_SELECTED:
         noteRect.selected = changedPropValue;
         break;
     }
@@ -572,28 +537,27 @@ export class TrackChart extends AbstractChart {
 
     paramDiffs.forEach(diff => {
       const key = diff.key;
-      if (key === "barNum" || key === "barWidth") {
+      if (key === TRACK_PROP_BAR_NUM || key === TRACK_PROP_BAR_WIDTH) {
         chartWidthUpdateFlag = true;
-        if (key === "barWidth") {
+        if (key === TRACK_PROP_BAR_WIDTH) {
           bgRedrawFlag = true;
           snapUnitRecalcFlag = true;
           convertFactorRecalcFlag = true;
           noteRectHorizontalUpdateFlag = true;
           currentTickUpdateFlag = true;
         }
-      // } else if (key === "trackNum" || key === "trackHeight") {
-      } else if (key === "trackHeight") {
+      } else if (key === TRACK_PROP_HEIGHT) {
         chartHeightUpdateFlag = true;
-        if (key === "trackHeight") {
+        if (key === TRACK_PROP_HEIGHT) {
           bgRedrawFlag = true;
           noteRectVerticalUpdateFlag = true
         }
-      } else if (key === "currentTick") {
+      } else if (key === TRACK_PROP_CURRENT) {
         currentTickUpdateFlag = true;
-      } else if (key === "divNum") {
+      } else if (key === TRACK_PROP_DIV_NUM) {
         bgRedrawFlag = true;
         snapUnitRecalcFlag = true;
-      } else if (key === "resolution") {
+      } else if (key === TRACK_PROP_RESOLUTION) {
         convertFactorRecalcFlag = true;
         noteRectHorizontalUpdateFlag = true;
         currentTickUpdateFlag = true;
@@ -634,6 +598,7 @@ export class TrackChart extends AbstractChart {
       });
     }
     if (currentTickUpdateFlag) {
+      // set x to where the rect is centerized
       const x = this.tickToX(newState.currentTick) - Number(this._currentLineRect.getAttribute('width'))*0.5
       this._currentLineRect.setAttribute('x', String(x));
     }

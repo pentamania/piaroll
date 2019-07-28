@@ -1,16 +1,11 @@
-import {
-  NOTE_ID_KEY,
-  TRACK_MODEL_PROPERTIES,
-  EVENT_ADD_NOTE,
-  EVENT_REMOVE_NOTE,
-  EVENT_EDIT_NOTE,
-  NOTE_PROP_TRACK,
-  DEFAULT_TRACK_ID,
-} from "./config";
+import { NOTE_ID_KEY, TRACK_MODEL_PROPERTIES, EVENT_ADD_NOTE, EVENT_REMOVE_NOTE, EVENT_EDIT_NOTE, NOTE_PROP_TRACK, DEFAULT_TRACK_ID, TRACK_PROP_NOTES, } from "./config";
 import EventEmitter from 'wolfy87-eventemitter';
+import { StrOrNum } from "./config";
 
-type stringOrNum = number | number;
-
+/**
+ * @class TrackModel
+ * @param data {any}
+ */
 export class TrackModel extends EventEmitter {
   private _listeners;
   private _data;
@@ -33,7 +28,7 @@ export class TrackModel extends EventEmitter {
         configurable: true
       })
 
-      if (key === 'notes' && typeof data[key] === 'object') {
+      if (key === TRACK_PROP_NOTES && typeof data[key] === 'object') {
         /* add id to each note */
         data[key].forEach(note => {
           // note[NOTE_ID_KEY] = this._serialId++;
@@ -69,7 +64,7 @@ export class TrackModel extends EventEmitter {
     this.emit(EVENT_ADD_NOTE, props);
   }
 
-  removeNoteById(id: stringOrNum | stringOrNum[]) {
+  removeNoteById(id: StrOrNum | StrOrNum[]) {
     const searchAndRemove = (id)=> {
       let removed: [];
       this._data.notes.some((note, i) => {

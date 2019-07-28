@@ -1,36 +1,24 @@
-interface iParams {
-  width?: number
-  height?: number
-  oddBackgroundColor?: string
-  evenBackgroundColor?: string
-  divNum?: number
-  // tickWidth: number
-}
-
-const evenTrackBackgroundColor = "#ACC0EA";
-const oddTrackBackgroundColor = "#4D6FA8";
-const MAJOR_LINE_WIDTH = 3;
-const MINOR_LINE_WIDTH = 1;
-const MAJOR_LINE_COLOR = "#000";
-const MINOR_LINE_COLOR = "#91A46A";
-
+import { TrackBackgroundParams, TRACK_DEFAULT_EVEN_COLOR, TRACK_MAJOR_LINE_COLOR, TRACK_MINOR_LINE_COLOR, TRACK_DEFAULT_DIV_NUM, TRACK_DEFAULT_ODD_COLOR, TRACK_DEFAULT_HEIGHT, TRACK_DEFAULT_WIDTH, TRACK_MAJOR_LINE_WIDTH, TRACK_MINOR_LINE_WIDTH } from "./config";
+const DEFAULT_PARAMS = {
+  width: TRACK_DEFAULT_WIDTH,
+  height: TRACK_DEFAULT_HEIGHT,
+  evenBackgroundColor: TRACK_DEFAULT_EVEN_COLOR,
+  oddBackgroundColor: TRACK_DEFAULT_ODD_COLOR,
+  majorLineColor: TRACK_MAJOR_LINE_COLOR,
+  minorLineColor: TRACK_MINOR_LINE_COLOR,
+  divNum: TRACK_DEFAULT_DIV_NUM,
+};
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
-const DEFAULT_PARAMS = {
-  width: 120,
-  height: 22,
-  evenBackgroundColor: evenTrackBackgroundColor,
-  oddBackgroundColor: oddTrackBackgroundColor,
-  majorLineColor: MAJOR_LINE_COLOR,
-  minorLineColor: MINOR_LINE_COLOR,
-  divNum: 4,
-};
 
 /**
  * @param {Element} trackElement
  * @returns void
  */
-export function setTrackBackground(targetElement:Element, params:iParams):void {
+export function setTrackBackground(
+  targetElement: SVGElement|HTMLElement,
+  params: TrackBackgroundParams
+):void {
   params = Object.assign({}, DEFAULT_PARAMS, params);
   canvas.width = params.width;
   canvas.height = params.height * 2;
@@ -48,8 +36,8 @@ export function setTrackBackground(targetElement:Element, params:iParams):void {
   const tickWidth = params.width / divNum;
   for (var i = 0; i <= divNum; i++) {
     const isMajor = (i%divNum === 0);
-    ctx.lineWidth = (isMajor) ? MAJOR_LINE_WIDTH : MINOR_LINE_WIDTH;
-    ctx.strokeStyle = (isMajor) ? MAJOR_LINE_COLOR : MINOR_LINE_COLOR;
+    ctx.lineWidth = (isMajor) ? TRACK_MAJOR_LINE_WIDTH : TRACK_MINOR_LINE_WIDTH;
+    ctx.strokeStyle = (isMajor) ? TRACK_MAJOR_LINE_COLOR : TRACK_MINOR_LINE_COLOR;
     ctx.beginPath();
     ctx.moveTo(i*tickWidth, 0);
     ctx.lineTo(i*tickWidth, canvas.height);

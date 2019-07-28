@@ -1,14 +1,5 @@
-import {SVG_NAMESPACE, CSS_CLASS_NOTE_RECT_EXTENSION_RECT, CSS_CLASS_NOTE_RECT_INPUT_LABEL} from "../config";
+import {SVG_NAMESPACE, CSS_CLASS_NOTE_RECT_EXTENSION_RECT, CSS_CLASS_NOTE_RECT_INPUT_LABEL, _EVENT_NOTERECT_REMOVED, NOTE_RECT_ACTIVE_STROKE_STYLE, NOTE_RECT_INPUT_ELEMENT_HEIGHT, EXTENSION_RECT_WIDTH, NOTE_RECT_INPUT_ELEMENT_WIDTH, NOTE_RECT_DEFAULT_FILL, NOTE_RECT_STROKE_WIDTH, EXTENSTION_RECT_FILL} from "../config";
 import EventEmitter from 'wolfy87-eventemitter';
-const DEFAULT_FILL = "#FE7A8E";
-const STROKE_WIDTH = 2;
-const ACTIVE_STROKE_STYLE = "#FFF";
-const EXTENSION_RECT_WIDTH = 4;
-const EXTENSTION_RECT_FILL = "#ce3939";
-
-// cssで拡張できるようにする？
-const INPUT_ELEMENT_WIDTH = 36;
-const INPUT_ELEMENT_HEIGHT = 16;
 
 /**
  * @class NoteRect
@@ -21,7 +12,7 @@ export class NoteRect extends EventEmitter {
   private _height = 0
   private _tick = 0
   private _trackId = 0
-  private _activeStrokeStyle = ACTIVE_STROKE_STYLE
+  private _activeStrokeStyle = NOTE_RECT_ACTIVE_STROKE_STYLE
   private _fillStyle
   private _selected = false
   private _removable = true
@@ -71,7 +62,7 @@ export class NoteRect extends EventEmitter {
     if (this.extensionElement != null)
       this.extensionElement.setAttribute('height', String(v));
     if (this._foreignInputWrapper)
-      this._foreignInputWrapper.setAttribute('y', String((v - INPUT_ELEMENT_HEIGHT)*0.5));
+      this._foreignInputWrapper.setAttribute('y', String((v - NOTE_RECT_INPUT_ELEMENT_HEIGHT)*0.5));
   }
   get selected() { return this._selected; }
   set selected(v) {
@@ -99,8 +90,8 @@ export class NoteRect extends EventEmitter {
   set inputValue(v:number|string) {
     if (!this.inputElement) {
       var fi = this._foreignInputWrapper = document.createElementNS(SVG_NAMESPACE, "foreignObject");
-      fi.setAttribute('width', String(INPUT_ELEMENT_WIDTH));
-      fi.setAttribute('height', String(INPUT_ELEMENT_HEIGHT));
+      fi.setAttribute('width', String(NOTE_RECT_INPUT_ELEMENT_WIDTH));
+      fi.setAttribute('height', String(NOTE_RECT_INPUT_ELEMENT_HEIGHT));
       fi.setAttribute('y', String(this.height));
       this._containerElement.appendChild(fi)
 
@@ -129,7 +120,7 @@ export class NoteRect extends EventEmitter {
    * constructor
    */
   constructor(
-    color: string = DEFAULT_FILL,
+    color: string = NOTE_RECT_DEFAULT_FILL,
     extendable: boolean|string = true,
     removable: boolean = true,
     shiftable: boolean = true,
@@ -142,7 +133,7 @@ export class NoteRect extends EventEmitter {
     // main-rect-svg
     this._rectElement = document.createElementNS(SVG_NAMESPACE, "rect");
     // this.svgElement = document.createElementNS(SVG_NAMESPACE, "rect");
-    this._rectElement.setAttribute('stroke-width', String(STROKE_WIDTH));
+    this._rectElement.setAttribute('stroke-width', String(NOTE_RECT_STROKE_WIDTH));
     this.fill = color;
     this._containerElement.appendChild(this._rectElement);
 
@@ -172,7 +163,7 @@ export class NoteRect extends EventEmitter {
 
   remove() {
     this._containerElement.parentElement.removeChild(this._containerElement);
-    this.emit('removed');
+    this.emit(_EVENT_NOTERECT_REMOVED);
   }
 
   addEventListener(...v) {

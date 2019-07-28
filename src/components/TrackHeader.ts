@@ -1,12 +1,14 @@
 import { createDiv, shallowDiff, arrayItemSimpleDiff, cloneObj } from "../utils";
-import { HEADER_DEFAULT_STATE as defaultState, CSS_CLASS_TRACK_HEADER, CSS_CLASS_TRACK_HEADER_BUTTON, CSS_CLASS_TRACK_HEADER_LABEL } from "../config";
+import { HEADER_DEFAULT_STATE as defaultState, CSS_CLASS_TRACK_HEADER, CSS_CLASS_TRACK_HEADER_BUTTON, CSS_CLASS_TRACK_HEADER_LABEL, TRACK_PROP_HEIGHT } from "../config";
+import { StrOrNum } from "../config";
 const KEY_PROP = 'key';
 const initialState = {
   tracks: [],
 }
 
 /**
- * header HTML component
+ * @class HeaderComponent
+ * header HTML wrapper component
  */
 class HeaderComponent {
 
@@ -17,7 +19,7 @@ class HeaderComponent {
   private _isActive: boolean = true;
 
   get parent() {return this.element.parentElement; }
-  set height(v:number|string) {
+  set height(v: StrOrNum) {
     if (typeof v === 'number') {
       this.element.style.height = v + "px";
       this.element.style.lineHeight = v + "px";
@@ -140,7 +142,7 @@ export class TrackHeader {
     paramDiff.forEach((d) => {
       // const key = d.path[0];
       const key = d.key;
-      if (key === "trackHeight") {
+      if (key === TRACK_PROP_HEIGHT) {
         this._headers.forEach((header) => {
           header.height = d.value;
         });

@@ -5,17 +5,19 @@ import {
   CSS_CLASS_SCALE_TRACK_CHART,
   CSS_CLASS_SCALE_TRACK_NUMLABEL,
   CSS_CLASS_SCALE_TRACK_MARKER,
+  TRACK_PROP_BAR_NUM,
+  TRACK_PROP_BAR_WIDTH,
+  TRACK_PROP_HEIGHT,
+  TRACK_PROP_CURRENT,
+  TRACK_PROP_RESOLUTION,
+  SCALE_TRACK_DEFAULT_BACKGROUND_COLOR,
+  MARKER_PATH_POINTS,
+  MARKER_HEIGHT,
  } from "../config";
 import { shallowDiff } from "../utils";
 import { SvgText } from "./SvgText";
 import { AbstractChart } from "./abstracts/AbstractChart";
 import { App } from "../App";
-const DEFAULT_SCALE_BACKGROUND_COLOR = "#645F8B";
-
-// marker config
-const MARKER_H = 7;
-const MARKER_RAD = 9;
-const POINTS = `-${MARKER_RAD},-${MARKER_H / 2} ${MARKER_RAD},-${MARKER_H / 2} 0,${MARKER_H}`
 
 /**
  * @class ScaleChart
@@ -36,14 +38,14 @@ export class ScaleTrackChart extends AbstractChart {
     const chartSvg = this._chartSvg = document.createElementNS(SVG_NAMESPACE, "svg");
     chartSvg.style.boxSizing = 'border-box';
     chartSvg.style.display = 'block';
-    chartSvg.style.background = DEFAULT_SCALE_BACKGROUND_COLOR;
+    chartSvg.style.background = SCALE_TRACK_DEFAULT_BACKGROUND_COLOR;
     chartSvg.style.borderBottom = 'solid 1px gray';
     chartSvg.style.cursor = 'pointer';
     chartSvg.setAttribute('class', `${CSS_CLASS_SCALE_TRACK_CHART}`);
 
     // marker
     const marker = this._markerSvg = document.createElementNS(SVG_NAMESPACE, "polygon");
-    marker.setAttribute('points', POINTS);
+    marker.setAttribute('points', MARKER_PATH_POINTS);
     marker.setAttribute('fill', MARKER_COLOR);
     marker.setAttribute('class', `${CSS_CLASS_SCALE_TRACK_MARKER}`);
     chartSvg.appendChild(marker);
@@ -56,7 +58,11 @@ export class ScaleTrackChart extends AbstractChart {
     });
   }
 
-  // resolution/barWidth/barNumが更新されたらupdate
+  /**
+   * render the measures
+   * Run when resolution/barWidth/barNum is updated
+   * @param state
+   */
   setMeasures(state) {
     // reset
     this._measureTexts.forEach(numLabel => {
@@ -93,18 +99,18 @@ export class ScaleTrackChart extends AbstractChart {
 
     shallowDiff(this._state, newState).forEach(diff => {
       const key = diff.key;
-      if (key === "barNum" || key === "barWidth") {
+      if (key === TRACK_PROP_BAR_NUM || key === TRACK_PROP_BAR_WIDTH) {
         chartWidthUpdateFlag = true;
         measureTextUpdateFlag = true;
-        if (key === "barWidth") {
+        if (key === TRACK_PROP_BAR_WIDTH) {
           convertFactorRecalcFlag = true;
           currentTickUpdateFlag = true;
         }
-      } else if (key === "trackHeight") {
+      } else if (key === TRACK_PROP_HEIGHT) {
         chartHeightUpdateFlag = true;
-      } else if (key === "currentTick") {
+      } else if (key === TRACK_PROP_CURRENT) {
         currentTickUpdateFlag = true;
-      } else if (key === "resolution") {
+      } else if (key === TRACK_PROP_RESOLUTION) {
         convertFactorRecalcFlag = true;
         currentTickUpdateFlag = true;
       }
@@ -126,7 +132,7 @@ export class ScaleTrackChart extends AbstractChart {
       chartSvg.setAttribute('height', String(this._chartHeight));
     }
     if (currentTickUpdateFlag) {
-      this._markerSvg.style.transform = `translate(${this.tickToX(newState.currentTick)}px, ${this._chartHeight - MARKER_H}px)`;
+      this._markerSvg.style.transform = `translate(${this.tickToX(newState.currentTick)}px, ${this._chartHeight - MARKER_HEIGHT}px)`;
     }
     if (measureTextUpdateFlag) {
       this.setMeasures(newState);
