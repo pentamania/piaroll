@@ -277,6 +277,11 @@ export class TrackChart extends AbstractChart {
   }
   yToTrackId(y: number) { return Math.floor(y / this._state.trackHeight); }
 
+  /**
+   * ノーツを追加する
+   * クリック・ドラッグ時の振る舞いなども設定
+   * @param noteParam
+   */
   addNoteRect(noteParam) {
     const chartSvg = this._chartSvg
     const noteRect = new NoteRect(
@@ -356,7 +361,7 @@ export class TrackChart extends AbstractChart {
       /* x-axis move */
       const pointerDeltaX = e.clientX - moveStartX;
       const xMovingRects = [];
-      const noteXExceedingRangeExists = this._noteRects.some((nRect, i) => {
+      const noteExceedingRangeXExists = this._noteRects.some((nRect, i) => {
         if (nRect.selected && nRect.tempStartX != null) {
           const dest = nRect.tempStartX + pointerDeltaX;
           if (dest < 0 || this._chartWidth - nRect.width < dest) return true;
@@ -366,7 +371,7 @@ export class TrackChart extends AbstractChart {
           })
         }
       });
-      if (!noteXExceedingRangeExists) {
+      if (!noteExceedingRangeXExists) {
         /* use current noteRect as standard */
         const standardNoteDestX = noteRect.tempStartX + pointerDeltaX;
         const standardNoteActualDestX = (this.isSnapping) ? this.snapToDiv(standardNoteDestX) : standardNoteDestX;
@@ -375,7 +380,9 @@ export class TrackChart extends AbstractChart {
         xMovingRects.forEach((d)=> {
           const targetNoteRect = this._noteRects[d.index];
           if (!targetNoteRect.shiftable) return;
-          targetNoteRect.x = targetNoteRect.tempStartX + standardNoteDeltaX;
+          const distX = targetNoteRect.tempStartX + standardNoteDeltaX;
+          // targetNoteRect.x = distX;
+          this._model.setNoteById(targetNoteRect.id, NOTE_PROP_START, this.xToTick(distX));
         });
       }
 
@@ -384,7 +391,7 @@ export class TrackChart extends AbstractChart {
       const trackIdDelta = this.yToTrackId(pointerY) - noteRect.trackId;
       // const deltaY = e.clientY - moveStartY;
       const yMovingRects = [];
-      const noteYExceedingRangeExists = this._noteRects.some((nRect, i) => {
+      const noteExceedingRangeYExists = this._noteRects.some((nRect, i) => {
         if (nRect.selected && nRect.tempStartY != null) {
           const destId = nRect.trackId + trackIdDelta;
           if (destId < 0 || this.maxTrackId < destId) return true;
@@ -396,12 +403,12 @@ export class TrackChart extends AbstractChart {
           })
         }
       });
-      if (!noteYExceedingRangeExists) {
+      if (!noteExceedingRangeYExists) {
         yMovingRects.forEach((d) => {
           const targetNoteRect = this._noteRects[d.index];
           if (!targetNoteRect.shiftable) return;
-          targetNoteRect.y = (targetNoteRect.trackId + trackIdDelta) * this._state.trackHeight;
-          // targetNoteRect.y = this.yToTrackId(d.dest) * this._state.trackHeight;
+          // targetNoteRect.y = (targetNoteRect.trackId + trackIdDelta) * this._state.trackHeight;
+          this._model.setNoteById(targetNoteRect.id, NOTE_PROP_TRACK, targetNoteRect.trackId + trackIdDelta);
         });
       }
     }
