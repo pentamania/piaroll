@@ -290,7 +290,7 @@ export class TrackChart extends AbstractChart {
       noteParam[NOTE_PROP_REMOVABLE],
       noteParam[NOTE_PROP_SHIFTABLE]
     );
-    let inputLabelEventHandler;
+    // let inputLabelEventHandler;
     // console.log(noteParam, noteParam[NOTE_ID_KEY]);
 
     /* noteRect setup */
@@ -304,11 +304,14 @@ export class TrackChart extends AbstractChart {
     }
     if (noteParam[NOTE_PROP_LABEL] != null) {
       noteRect.inputValue = noteParam[NOTE_PROP_LABEL];
-      inputLabelEventHandler = (e) => {
+      const inputLabelEventHandler = (e) => {
         // console.log('changed', e.target.value);
         this._model.setNoteById(noteParam[NOTE_ID_KEY], NOTE_PROP_LABEL, e.target.value)
       };
       noteRect.inputElement.addEventListener('input', inputLabelEventHandler);
+      noteRect.once(_EVENT_NOTERECT_REMOVED, () => {
+        noteRect.inputElement.removeEventListener('input', inputLabelEventHandler);
+      });
     }
     noteRect.y = noteParam[NOTE_PROP_TRACK] * this._state.trackHeight;
     noteRect.trackId = noteParam[NOTE_PROP_TRACK];
@@ -468,7 +471,7 @@ export class TrackChart extends AbstractChart {
       document.removeEventListener('mouseup', onDragEnd);
 
       if (noteRect.extensionElement != null) noteRect.extensionElement.removeEventListener('mousedown', onStartNoteExtend);
-      if (inputLabelEventHandler != null) noteRect.inputElement.removeEventListener('input', inputLabelEventHandler);
+      // if (inputLabelEventHandler != null) noteRect.inputElement.removeEventListener('input', inputLabelEventHandler);
       chartSvg.removeEventListener('mousemove', onMoveNoteExtend);
       chartSvg.removeEventListener('mouseup', onEndNoteExtend);
     });

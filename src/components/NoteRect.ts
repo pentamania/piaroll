@@ -1,4 +1,4 @@
-import {SVG_NAMESPACE, CSS_CLASS_NOTE_RECT_EXTENSION_RECT, CSS_CLASS_NOTE_RECT_INPUT_LABEL, _EVENT_NOTERECT_REMOVED, NOTE_RECT_ACTIVE_STROKE_STYLE, NOTE_RECT_INPUT_ELEMENT_HEIGHT, EXTENSION_RECT_WIDTH, NOTE_RECT_INPUT_ELEMENT_WIDTH, NOTE_RECT_DEFAULT_FILL, NOTE_RECT_STROKE_WIDTH, EXTENSTION_RECT_FILL} from "../config";
+import {SVG_NAMESPACE, CSS_CLASS_NOTE_RECT_EXTENSION_RECT, CSS_CLASS_NOTE_RECT_INPUT_LABEL, _EVENT_NOTERECT_REMOVED, NOTE_RECT_ACTIVE_STROKE_STYLE, NOTE_RECT_INPUT_ELEMENT_HEIGHT, EXTENSION_RECT_WIDTH, NOTE_RECT_INPUT_ELEMENT_WIDTH, NOTE_RECT_DEFAULT_FILL, NOTE_RECT_STROKE_WIDTH, EXTENSTION_RECT_FILL, EVENT_REMOVE_NOTE, NOTE_RECT_INPUT_ELEMENT_LEFT} from "../config";
 import EventEmitter from 'wolfy87-eventemitter';
 
 /**
@@ -17,6 +17,7 @@ export class NoteRect extends EventEmitter {
   private _selected = false
   private _removable = true
   private _shiftable = true
+  private _isInputting: boolean = false
   private _id: number
   duration: number
   tempStartX: number
@@ -74,7 +75,7 @@ export class NoteRect extends EventEmitter {
       this._rectElement.setAttribute('stroke', null);
     }
   }
-  get removable() { return this._removable; }
+  get removable() { return this._removable && !this._isInputting; }
   // set removable(v: boolean) { this._removable = v; }
   get shiftable() { return this._shiftable; }
   get tick() { return this._tick; }
@@ -92,6 +93,7 @@ export class NoteRect extends EventEmitter {
       var fi = this._foreignInputWrapper = document.createElementNS(SVG_NAMESPACE, "foreignObject");
       fi.setAttribute('width', String(NOTE_RECT_INPUT_ELEMENT_WIDTH));
       fi.setAttribute('height', String(NOTE_RECT_INPUT_ELEMENT_HEIGHT));
+      fi.setAttribute('x', String(NOTE_RECT_INPUT_ELEMENT_LEFT));
       fi.setAttribute('y', String(this.height));
       this._containerElement.appendChild(fi)
 
@@ -103,7 +105,31 @@ export class NoteRect extends EventEmitter {
       input.style.border = "none";
       input.style.background = "transparent";
       // input.style.width = INPUT_ELEMENT_WIDTH+"px";
-      fi.appendChild(this.inputElement)
+
+      // REVIEW: prevent chart mouse event propagation
+      ['mouseup', 'mousedown'].forEach((eventName)=> {
+        const handler = (e) => {
+          e.stopPropagation();
+        };
+        input.addEventListener(eventName, handler, false);
+        this.once(_EVENT_NOTERECT_REMOVED, ()=> {
+          input.removeEventListener(eventName, handler, false);
+        })
+      });
+
+      // disable note removing while input
+      ['focus', 'blur'].forEach((eventName)=> {
+        const handler = (e) => {
+          e.stopPropagation();
+          this._isInputting = (eventName === 'focus') ? true : false;
+        };
+        input.addEventListener(eventName, handler, false);
+        this.once(_EVENT_NOTERECT_REMOVED, () => {
+          input.removeEventListener(eventName, handler, false);
+        })
+      })
+
+      fi.appendChild(this.inputElement);
     }
     this.inputElement.value = String(v);
   }

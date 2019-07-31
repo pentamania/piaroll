@@ -41,7 +41,7 @@ export const EXTENSION_RECT_WIDTH = 4;
 export const EXTENSTION_RECT_FILL = "#ce3939";
 export const NOTE_RECT_INPUT_ELEMENT_WIDTH = 36;
 export const NOTE_RECT_INPUT_ELEMENT_HEIGHT = 16;
-
+export const NOTE_RECT_INPUT_ELEMENT_LEFT = 4;
 
 // chart/track const
 export const SELECTION_MIN_THRESHOLD = 5;
