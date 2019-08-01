@@ -448,7 +448,7 @@ export class TrackChart extends AbstractChart {
       e.preventDefault(); // for smooth move
       let destWidth = startWidth + (e.clientX - dragStartX);
       destWidth = this.snapToDiv(destWidth);
-      if (destWidth < NOTE_DEFAULT_WIDTH) return;
+      if (destWidth <= 0) return;
       noteRect.width = destWidth;
     }
     const onEndNoteExtend = (e) => {
