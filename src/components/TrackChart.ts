@@ -1,6 +1,4 @@
-// import EventEmitter from "EventEmitter";
-// import deef from "deep-diff";
-import { CSS_CLASS_NOTE_RECT, CSS_CLASS_TRACK_BRUSH_RECT, CSS_CLASS_TRACK_CHART, CSS_CLASS_TRACK_CURRENT_LINE, EVENT_FAIL_NOTE_REMOVE, EVENT_POINT_START_CHART, iNoteParam, MARKER_COLOR, NOTE_ID_KEY, NOTE_PROP_LABEL, NOTE_PROP_REMOVABLE, NOTE_PROP_SHIFTABLE, NOTE_PROP_TRACK, SVG_NAMESPACE, TRACK_DEFAULT_STATE as defaultState, _EVENT_NOTERECT_REMOVED, NOTE_PROP_SELECTED, MARKER_LINE_DEFAULT_WIDTH, NOTE_PROP_DURATION, NOTE_PROP_START, TRACK_PROP_BAR_NUM, TRACK_PROP_BAR_WIDTH, TRACK_PROP_HEIGHT, TRACK_PROP_CURRENT, TRACK_PROP_DIV_NUM, TRACK_PROP_RESOLUTION, TrackState, SELECTION_MIN_THRESHOLD, NOTE_DEFAULT_WIDTH } from "../config";
+import { CSS_CLASS_NOTE_RECT, CSS_CLASS_TRACK_BRUSH_RECT, CSS_CLASS_TRACK_CHART, CSS_CLASS_TRACK_CURRENT_LINE, EVENT_FAIL_NOTE_REMOVE, EVENT_POINT_START_CHART, iNoteParam, MARKER_COLOR, NOTE_ID_KEY, NOTE_PROP_LABEL, NOTE_PROP_REMOVABLE, NOTE_PROP_SHIFTABLE, NOTE_PROP_TRACK, SVG_NAMESPACE, TRACK_DEFAULT_STATE as defaultState, _EVENT_NOTERECT_REMOVED, NOTE_PROP_SELECTED, MARKER_LINE_DEFAULT_WIDTH, NOTE_PROP_DURATION, NOTE_PROP_START_TICK, TRACK_PROP_BAR_NUM, TRACK_PROP_BAR_WIDTH, TRACK_PROP_HEIGHT, TRACK_PROP_CURRENT, TRACK_PROP_DIV_NUM, TRACK_PROP_RESOLUTION, TrackState, SELECTION_MIN_THRESHOLD, NOTE_DEFAULT_WIDTH } from "../config";
 import { setTrackBackground } from "../drawBackground";
 import { KeyState as globalKeyState } from "../KeyState";
 import { TrackModel } from "../TrackModel";
@@ -26,21 +24,26 @@ export class TrackChart extends AbstractChart {
   private _clipBoardNotes: iNoteParam[] = [];
   private _app
   isSnapping: boolean = true
-  _isActive: boolean = false
   // private _chartBoundingRect // headerWidthを変えたりしてchartの位置が変わったときだけ更新する
 
-  set active(v) {
+  _isActive: boolean = false
+  set active(v: boolean) {
     if  (v == false) {
-      this._clipBoardNotes.length = 0; // clear
+      // clean clipboard adn clear selection
+      this._clipBoardNotes.length = 0;
       this._model.setAllNotes((note) => note.selected = false);
     }
     this._isActive = v;
     // console.log('set active', v);
   }
-  get maxTrackId() { return this._state.tracks.length - 1; }
   private _model: TrackModel
   set model(v: TrackModel) { this._model = v; }
 
+  get maxTrackId() { return this._state.tracks.length - 1; }
+
+  /**
+   * constructor
+   */
   constructor(app) {
     super();
     this._app = app;
@@ -65,23 +68,39 @@ export class TrackChart extends AbstractChart {
     chartSvg.setAttribute('class', `${CSS_CLASS_TRACK_CURRENT_LINE}`);
     this._svgLineLayer.appendChild(line);
 
-    /* mouse/touch event */
+    // activation event
     chartSvg.addEventListener('mousedown', ()=> {
       if (!this._isActive) this._app.setActiveChart(this);
     }, true);
 
-    /* brush selection setting */
+    this._setupBrushSelection();
+    this._setupKeyboardEvent();
+
+    // 初期設定はどうする？
+    this.render(cloneObj(defaultState));
+  }
+
+  /**
+   * @private
+   * setup brush rect selection feature
+   * used in constructor
+   * @returns [void]
+   */
+  private _setupBrushSelection() {
+    const chartSvg = this._chartSvg;
     const brush = new BrushRect();
     brush.append(this._svgLineLayer);
     let startX = 0;
     let startY = 0;
     let isDragging = false;
-    let tempChartRect;
+    let tempChartRect: DOMRect | ClientRect;
     const selectionRect = { x: 0, y: 0, width: 0, height: 0 };
+
     chartSvg.addEventListener('mousedown', (e) => {
-      // e.preventDefault(); // bothers noteRect input area
-      // ノーツ選択状態を全解除
-      this._model.setAllNotes((note) => note.selected = false );
+      // e.preventDefault(); // this will bother noteRect input area
+
+      // clear all note selection
+      this._model.setAllNotes((note) => note.selected = false);
 
       isDragging = true;
       const chartRect = tempChartRect = chartSvg.getBoundingClientRect();
@@ -113,6 +132,7 @@ export class TrackChart extends AbstractChart {
       const dx = x - startX;
       const dy = y - startY;
 
+      // switch brush x/width by pointing position
       if (dx < 0) {
         brush.x = x;
         brush.width = Math.abs(dx);
@@ -121,7 +141,7 @@ export class TrackChart extends AbstractChart {
         brush.width = dx;
       }
 
-      // 始点よりマイナス側に移動
+      // switch brush y/height by pointing position
       if (dy < 0) {
         brush.y = y;
         brush.height = Math.abs(dy);
@@ -129,7 +149,7 @@ export class TrackChart extends AbstractChart {
         brush.y = startY;
         brush.height = dy;
       }
-    })
+    });
     document.addEventListener('mouseup', (e) => {
       if (!isDragging) return;
       e.preventDefault();
@@ -144,20 +164,20 @@ export class TrackChart extends AbstractChart {
       const adx = Math.abs(dx);
       const ady = Math.abs(dy);
 
-      /* when move is small */
+      /* when move delta is small */
       if (adx < SELECTION_MIN_THRESHOLD && ady < SELECTION_MIN_THRESHOLD) {
 
-        /* emit event */
-        const setX = (this.isSnapping) ? this.snapToDiv(x) : x;
+        /* emit pointing event */
+        const setX = (this.isSnapping) ? this._snapToDiv(x) : x;
         this._model.emit(EVENT_POINT_START_CHART, {
           x: setX,
           tick: this.xToTick(setX),
-          trackId: this.yToTrackId(y),
+          trackId: this._yToTrackId(y),
         });
 
-        /* memoraize selected position */
-        this._currentSelectedTick = this.xToTick(this.snapToDiv(x));
-        this._currentSelectedTrackId = this.yToTrackId(y);
+        /* memorize selected position */
+        this._currentSelectedTick = this.xToTick(this._snapToDiv(x));
+        this._currentSelectedTrackId = this._yToTrackId(y);
         // console.log(this._currentSelectedTick, this._currentSelectedTrackId);
       } else {
         if (dx < 0) {
@@ -175,25 +195,32 @@ export class TrackChart extends AbstractChart {
           selectionRect.height = ady;
         }
 
-        /* select noteRect within range */
+        /* select noteRect within brush range */
         this._noteRects.forEach((nRect) => {
           if (testRectRect(selectionRect, nRect)) {
             this._model.setNoteById(nRect.id, NOTE_PROP_SELECTED, true);
           }
-        })
+        });
       }
 
       isDragging = false;
       brush.visible = false;
     });
+  }
 
-    /* key event: only works when track is active */
-    const copyNote = (noteRect: NoteRect)=> {
-      const copiedNote = this._state.notes.find((note)=> {
+  /**
+   * enable keyboard events
+   * should only work when the track is active
+   */
+  private _setupKeyboardEvent() {
+    // find and return cloned specified note
+    const copyNote = (noteRect: NoteRect) => {
+      const copiedNote = this._state.notes.find((note) => {
         return note[NOTE_ID_KEY] === noteRect.id;
       });
       return cloneObj(copiedNote);
     };
+
     document.addEventListener('keydown', (e) => {
       if (!this._isActive) return;
 
@@ -201,7 +228,7 @@ export class TrackChart extends AbstractChart {
         if (e.key === 'c') {
           /* copy */
           this._clipBoardNotes.length = 0; // clear
-          this._noteRects.forEach((nr)=> {
+          this._noteRects.forEach((nr) => {
             if (nr.selected) {
               this._clipBoardNotes.push(copyNote(nr));
             }
@@ -222,13 +249,13 @@ export class TrackChart extends AbstractChart {
           if (!this._clipBoardNotes.length) return;
           // tick最小ノートが基準
           const cloneNotes = cloneObj(this._clipBoardNotes);
-          const standard = cloneNotes.reduce((a,b)=> {
+          const standard = cloneNotes.reduce((a, b) => {
             return a.tick < b.tick ? a : b;
           });
           // console.log("star", standard);
           const standardTrackId = standard[NOTE_PROP_TRACK];
           const standardTick = standard.tick;
-          cloneNotes.forEach((noteParam)=> {
+          cloneNotes.forEach((noteParam) => {
             if (noteParam === standard) {
               noteParam.tick = this._currentSelectedTick;
               noteParam[NOTE_PROP_TRACK] = this._currentSelectedTrackId;
@@ -247,6 +274,7 @@ export class TrackChart extends AbstractChart {
           this._model.setAllNotes((note) => note.selected = false);
         }
       }
+
       if (e.key === 'Backspace' || e.key === 'Delete') {
         // 選択したノーツを消去:
         // 配列操作を伴うため、一度に行う
@@ -264,36 +292,43 @@ export class TrackChart extends AbstractChart {
         })
         model.removeNoteById(removedIds);
       }
-    })
-
-    // 初期設定はどうする？
-    this.render(cloneObj(defaultState));
+    });
   }
 
-  snapToDiv(x: number):number {
+  /**
+   * convert x to snappable value
+   * @param x
+   */
+  private _snapToDiv(x: number):number {
     // const unit = this._state.barWidth / this._state.divNum;
     const unit = this._divSnapUnit;
     return Math.floor(x/unit) * unit;
   }
-  yToTrackId(y: number) { return Math.floor(y / this._state.trackHeight); }
+
+  /**
+   * convert y to trackId
+   * @param x
+   */
+  private _yToTrackId(y: number) {
+    return Math.floor(y / this._state.trackHeight);
+  }
 
   /**
    * ノーツを追加する
    * クリック・ドラッグ時の振る舞いなども設定
    * @param noteParam
    */
-  addNoteRect(noteParam) {
+  addNoteRect(noteParam: iNoteParam) {
     const chartSvg = this._chartSvg
+    // console.log(noteParam, noteParam[NOTE_ID_KEY]);
+
+    /* noteRect init-setup */
     const noteRect = new NoteRect(
       noteParam.fill,
       noteParam.extendable,
       noteParam[NOTE_PROP_REMOVABLE],
       noteParam[NOTE_PROP_SHIFTABLE]
     );
-    // let inputLabelEventHandler;
-    // console.log(noteParam, noteParam[NOTE_ID_KEY]);
-
-    /* noteRect setup */
     noteRect.id = noteParam[NOTE_ID_KEY];
     noteRect.x = this.tickToX(noteParam.tick);
     noteRect.tick = noteParam.tick;
@@ -321,18 +356,21 @@ export class TrackChart extends AbstractChart {
       `${CSS_CLASS_NOTE_RECT}-${noteRect.id}`
     ];
 
-    /* note move by drag */
+    /**
+     * set note dragging feature
+     */
     let moveStartX = 0;
     // let moveStartY = 0;
-    let chartRect;
+    let chartRect: ClientRect | DOMRect;
     const onDragStart = (e) => {
       e.preventDefault(); // for smooth move
-      e.stopPropagation(); // chart自体のイベント発火を止める
+      e.stopPropagation(); // prevent propagation to chart event
       chartRect = chartSvg.getBoundingClientRect();
 
       if (!noteRect.selected) {
         // shiftキー押しで連続選択できるように
         if (!globalKeyState.shiftKey) {
+          // clear all selection once if shift key is not pressed
           this._model.setAllNotes((note) => {
             note.selected = false;
           });
@@ -355,6 +393,8 @@ export class TrackChart extends AbstractChart {
           nRect.tempStartY = nRect.y;
         }
       })
+
+      // TODO: fire press event
     }
     const onDragMove = (e) => {
       if (!moveStartX) return;
@@ -377,7 +417,7 @@ export class TrackChart extends AbstractChart {
       if (!noteExceedingRangeXExists) {
         /* use current noteRect as standard */
         const standardNoteDestX = noteRect.tempStartX + pointerDeltaX;
-        const standardNoteActualDestX = (this.isSnapping) ? this.snapToDiv(standardNoteDestX) : standardNoteDestX;
+        const standardNoteActualDestX = (this.isSnapping) ? this._snapToDiv(standardNoteDestX) : standardNoteDestX;
         // noteRect.x = (this.isSnapping) ? this.snapToDiv(standardNoteDestX) : standardNoteDestX;
         const standardNoteDeltaX = standardNoteActualDestX - noteRect.tempStartX;
         xMovingRects.forEach((d)=> {
@@ -385,13 +425,13 @@ export class TrackChart extends AbstractChart {
           if (!targetNoteRect.shiftable) return;
           const distX = targetNoteRect.tempStartX + standardNoteDeltaX;
           // targetNoteRect.x = distX;
-          this._model.setNoteById(targetNoteRect.id, NOTE_PROP_START, this.xToTick(distX));
+          this._model.setNoteById(targetNoteRect.id, NOTE_PROP_START_TICK, this.xToTick(distX));
         });
       }
 
       /* y-axis move: depends on trackId  */
       const pointerY = e.clientY - chartRect.top;
-      const trackIdDelta = this.yToTrackId(pointerY) - noteRect.trackId;
+      const trackIdDelta = this._yToTrackId(pointerY) - noteRect.trackId;
       // const deltaY = e.clientY - moveStartY;
       const yMovingRects = [];
       const noteExceedingRangeYExists = this._noteRects.some((nRect, i) => {
@@ -424,7 +464,7 @@ export class TrackChart extends AbstractChart {
       this._noteRects.forEach((nRect) => {
         if (nRect.selected) {
           // this._model.setNoteById(nRect.id, "tick", this.xToTick(nRect.x));
-          this._model.setNoteById(nRect.id, NOTE_PROP_TRACK, this.yToTrackId(nRect.y));
+          this._model.setNoteById(nRect.id, NOTE_PROP_TRACK, this._yToTrackId(nRect.y));
         }
       })
       moveStartX = 0; // reset
@@ -433,7 +473,9 @@ export class TrackChart extends AbstractChart {
     document.addEventListener('mousemove', onDragMove);
     document.addEventListener('mouseup', onDragEnd);
 
-    /* drag hitbox and extend note */
+    /**
+     * setup extendable hitbox and extend note
+     */
     let dragStartX = 0;
     let startWidth = 0;
     const onStartNoteExtend = (e) => {
@@ -447,7 +489,7 @@ export class TrackChart extends AbstractChart {
       e.stopPropagation();
       e.preventDefault(); // for smooth move
       let destWidth = startWidth + (e.clientX - dragStartX);
-      destWidth = this.snapToDiv(destWidth);
+      destWidth = this._snapToDiv(destWidth);
       if (destWidth <= 0) return;
       noteRect.width = destWidth;
     }
@@ -460,34 +502,49 @@ export class TrackChart extends AbstractChart {
       this._model.setNoteById(noteRect.id, NOTE_PROP_DURATION, duration); // notify change
       dragStartX = 0; // reset
     }
-    if (noteRect.extensionElement != null) noteRect.extensionElement.addEventListener('mousedown', onStartNoteExtend);
+    if (noteRect.extensionElement != null)
+      noteRect.extensionElement.addEventListener('mousedown', onStartNoteExtend);
     chartSvg.addEventListener('mousemove', onMoveNoteExtend);
     chartSvg.addEventListener('mouseup', onEndNoteExtend);
 
-    // unlease eventlistener after removal
+    /**
+     * free eventlisteners after removal
+     */
     noteRect.once(_EVENT_NOTERECT_REMOVED, () => {
       noteRect.removeEventListener('mousedown', onDragStart);
       document.removeEventListener('mousemove', onDragMove);
       document.removeEventListener('mouseup', onDragEnd);
 
-      if (noteRect.extensionElement != null) noteRect.extensionElement.removeEventListener('mousedown', onStartNoteExtend);
+      if (noteRect.extensionElement != null)
+        noteRect.extensionElement.removeEventListener('mousedown', onStartNoteExtend);
       // if (inputLabelEventHandler != null) noteRect.inputElement.removeEventListener('input', inputLabelEventHandler);
       chartSvg.removeEventListener('mousemove', onMoveNoteExtend);
       chartSvg.removeEventListener('mouseup', onEndNoteExtend);
     });
 
-    // append
+    // append to parent svg
     noteRect.append(this._svgNoteLayer);
     this._noteRects.push(noteRect);
   }
 
-  editNoteRect(noteId, changedPropKey: string, changedPropValue: any) {
+  /**
+   * Find noteRect by id and update its specified property value
+   * @method
+   * @param noteId
+   * @param changedPropKey
+   * @param changedPropValue
+   */
+  editNoteRect(
+    noteId: number,
+    changedPropKey: string,
+    changedPropValue: any
+  ) {
     const noteRect = this._noteRects.find((rect)=> {
       return rect.id === noteId;
     });
 
     switch (changedPropKey) {
-      case NOTE_PROP_START:
+      case NOTE_PROP_START_TICK:
         noteRect.x = this.tickToX(changedPropValue);
         noteRect.tick = changedPropValue;
         break;
@@ -511,7 +568,12 @@ export class TrackChart extends AbstractChart {
     }
   }
 
-  removeNoteRect(noteId) {
+  /**
+   * remove note with specifed id
+   * @method
+   * @param noteId
+   */
+  removeNoteRect(noteId: number) {
     this._noteRects.some((rect, i) => {
       if (rect.id === noteId) {
         rect.remove();
@@ -545,6 +607,7 @@ export class TrackChart extends AbstractChart {
     this._state = newState; // 先にセット
     // console.log(paramDiffs, noteDiffs);
 
+    // set rerender flags
     paramDiffs.forEach(diff => {
       const key = diff.key;
       if (key === TRACK_PROP_BAR_NUM || key === TRACK_PROP_BAR_WIDTH) {

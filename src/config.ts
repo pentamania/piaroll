@@ -14,7 +14,7 @@ export interface AppParam {
 // Note/NoteRect const
 export const DEFAULT_TRACK_ID = 0;
 export const NOTE_ID_KEY = "__piano_uid__";
-export const NOTE_PROP_START = 'tick';
+export const NOTE_PROP_START_TICK = 'tick';
 export const NOTE_PROP_TRACK = 'trackId';
 export const NOTE_PROP_DURATION = 'duration';
 export const NOTE_PROP_LABEL = 'label';
