@@ -1,4 +1,4 @@
-import { CSS_CLASS_NOTE_RECT, CSS_CLASS_TRACK_BRUSH_RECT, CSS_CLASS_TRACK_CHART, CSS_CLASS_TRACK_CURRENT_LINE, EVENT_FAIL_NOTE_REMOVE, EVENT_POINT_START_CHART, iNoteParam, MARKER_COLOR, NOTE_ID_KEY, NOTE_PROP_LABEL, NOTE_PROP_REMOVABLE, NOTE_PROP_SHIFTABLE, NOTE_PROP_TRACK, SVG_NAMESPACE, TRACK_DEFAULT_STATE as defaultState, _EVENT_NOTERECT_REMOVED, NOTE_PROP_SELECTED, MARKER_LINE_DEFAULT_WIDTH, NOTE_PROP_DURATION, NOTE_PROP_START_TICK, TRACK_PROP_BAR_NUM, TRACK_PROP_BAR_WIDTH, TRACK_PROP_HEIGHT, TRACK_PROP_CURRENT, TRACK_PROP_DIV_NUM, TRACK_PROP_RESOLUTION, TrackState, SELECTION_MIN_THRESHOLD, NOTE_DEFAULT_WIDTH, EVENT_SELECT_NOTE } from "../config";
+import { CSS_CLASS_NOTE_RECT, CSS_CLASS_TRACK_BRUSH_RECT, CSS_CLASS_TRACK_CHART, CSS_CLASS_TRACK_CURRENT_LINE, EVENT_FAIL_NOTE_REMOVE, EVENT_POINT_START_CHART, iNoteParam, MARKER_COLOR, NOTE_ID_KEY, NOTE_PROP_LABEL, NOTE_PROP_REMOVABLE, NOTE_PROP_SHIFTABLE, NOTE_PROP_TRACK, SVG_NAMESPACE, TRACK_DEFAULT_STATE as defaultState, _EVENT_NOTERECT_REMOVED, NOTE_PROP_SELECTED, MARKER_LINE_DEFAULT_WIDTH, NOTE_PROP_DURATION, NOTE_PROP_START_TICK, TRACK_PROP_BAR_NUM, TRACK_PROP_BAR_WIDTH, TRACK_PROP_HEIGHT, TRACK_PROP_CURRENT, TRACK_PROP_DIV_NUM, TRACK_PROP_RESOLUTION, TrackState, SELECTION_MIN_THRESHOLD, NOTE_DEFAULT_WIDTH, EVENT_SELECT_NOTE, NOTE_DRAGGING_THRESHOLD } from "../config";
 import { setTrackBackground } from "../drawBackground";
 import { KeyState as globalKeyState } from "../KeyState";
 import { TrackModel } from "../TrackModel";
@@ -302,7 +302,7 @@ export class TrackChart extends AbstractChart {
   private _snapToDiv(x: number):number {
     // const unit = this._state.barWidth / this._state.divNum;
     const unit = this._divSnapUnit;
-    return Math.floor(x/unit) * unit;
+    return Math.round(x / unit) * unit;
   }
 
   /**
@@ -360,7 +360,7 @@ export class TrackChart extends AbstractChart {
      * set note dragging feature
      */
     let moveStartX = 0;
-    // let moveStartY = 0;
+    let moveStartY = 0;
     let chartRect: ClientRect | DOMRect;
     const onDragStart = (e) => {
       e.preventDefault(); // for smooth move
@@ -380,7 +380,7 @@ export class TrackChart extends AbstractChart {
       }
 
       moveStartX = e.clientX;
-      // moveStartY = e.clientY;
+      moveStartY = e.clientY;
 
       // 以下だと初期位置が更新されないことがある
       // if (noteRect.selected) {
@@ -398,6 +398,7 @@ export class TrackChart extends AbstractChart {
       // TODO: clone object?
       this._model.emit(EVENT_SELECT_NOTE, noteRect);
     }
+
     const onDragMove = (e) => {
       if (!moveStartX) return;
       e.preventDefault(); // for smooth move
@@ -405,59 +406,63 @@ export class TrackChart extends AbstractChart {
 
       /* x-axis move */
       const pointerDeltaX = e.clientX - moveStartX;
-      // if (Math.abs(pointerDeltaX) < 3) return;
-      const xMovingRects = [];
-      const noteExceedingRangeXExists = this._noteRects.some((nRect, i) => {
-        if (nRect.selected && nRect.tempStartX != null) {
-          const dest = nRect.tempStartX + pointerDeltaX;
-          if (dest < 0 || this._chartWidth - nRect.width < dest) return true;
-          xMovingRects.push({
-            index: i,
-            // dest: dest,
-          })
-        }
-      });
-      if (!noteExceedingRangeXExists) {
-        /* use current noteRect as standard */
-        const standardNoteDestX = noteRect.tempStartX + pointerDeltaX;
-        const standardNoteActualDestX = (this.isSnapping) ? this._snapToDiv(standardNoteDestX) : standardNoteDestX;
-        // noteRect.x = (this.isSnapping) ? this.snapToDiv(standardNoteDestX) : standardNoteDestX;
-        const standardNoteDeltaX = standardNoteActualDestX - noteRect.tempStartX;
-        xMovingRects.forEach((d)=> {
-          const targetNoteRect = this._noteRects[d.index];
-          if (!targetNoteRect.shiftable) return;
-          const distX = targetNoteRect.tempStartX + standardNoteDeltaX;
-          // targetNoteRect.x = distX;
-          this._model.setNoteById(targetNoteRect.id, NOTE_PROP_START_TICK, this.xToTick(distX));
+      if (NOTE_DRAGGING_THRESHOLD < Math.abs(pointerDeltaX)) {
+        const xMovingRects = [];
+        const noteExceedingRangeXExists = this._noteRects.some((nRect, i) => {
+          if (nRect.selected && nRect.tempStartX != null) {
+            const dest = nRect.tempStartX + pointerDeltaX;
+            if (dest < 0 || this._chartWidth - nRect.width < dest) return true;
+            xMovingRects.push({
+              index: i,
+              // dest: dest,
+            })
+          }
         });
+        if (!noteExceedingRangeXExists) {
+          /* use current noteRect as standard */
+          const standardNoteDestX = noteRect.tempStartX + pointerDeltaX;
+          const standardNoteActualDestX = (this.isSnapping) ? this._snapToDiv(standardNoteDestX) : standardNoteDestX;
+          // noteRect.x = (this.isSnapping) ? this.snapToDiv(standardNoteDestX) : standardNoteDestX;
+          const standardNoteDeltaX = standardNoteActualDestX - noteRect.tempStartX;
+          xMovingRects.forEach((d)=> {
+            const targetNoteRect = this._noteRects[d.index];
+            if (!targetNoteRect.shiftable) return;
+            const distX = targetNoteRect.tempStartX + standardNoteDeltaX;
+            // targetNoteRect.x = distX;
+            this._model.setNoteById(targetNoteRect.id, NOTE_PROP_START_TICK, this.xToTick(distX));
+          });
+        }
       }
 
       /* y-axis move: depends on trackId  */
-      const pointerY = e.clientY - chartRect.top;
-      const trackIdDelta = this._yToTrackId(pointerY) - noteRect.trackId;
-      // const deltaY = e.clientY - moveStartY;
-      const yMovingRects = [];
-      const noteExceedingRangeYExists = this._noteRects.some((nRect, i) => {
-        if (nRect.selected && nRect.tempStartY != null) {
-          const destId = nRect.trackId + trackIdDelta;
-          if (destId < 0 || this.maxTrackId < destId) return true;
-          // const dest = nRect.tempStartY + deltaY;
-          // if (dest < 0 || this._chartHeight - this._state.trackHeight < dest) return true;
-          yMovingRects.push({
-            index: i,
-            // dest: dest,
-          })
-        }
-      });
-      if (!noteExceedingRangeYExists) {
-        yMovingRects.forEach((d) => {
-          const targetNoteRect = this._noteRects[d.index];
-          if (!targetNoteRect.shiftable) return;
-          // targetNoteRect.y = (targetNoteRect.trackId + trackIdDelta) * this._state.trackHeight;
-          this._model.setNoteById(targetNoteRect.id, NOTE_PROP_TRACK, targetNoteRect.trackId + trackIdDelta);
+      const deltaY = e.clientY - moveStartY;
+      if (NOTE_DRAGGING_THRESHOLD < Math.abs(deltaY)) {
+        const pointerY = e.clientY - chartRect.top;
+        const trackIdDelta = this._yToTrackId(pointerY) - noteRect.trackId;
+        const yMovingRects = [];
+        const noteExceedingRangeYExists = this._noteRects.some((nRect, i) => {
+          if (nRect.selected && nRect.tempStartY != null) {
+            const destId = nRect.trackId + trackIdDelta;
+            if (destId < 0 || this.maxTrackId < destId) return true;
+            // const dest = nRect.tempStartY + deltaY;
+            // if (dest < 0 || this._chartHeight - this._state.trackHeight < dest) return true;
+            yMovingRects.push({
+              index: i,
+              // dest: dest,
+            })
+          }
         });
+        if (!noteExceedingRangeYExists) {
+          yMovingRects.forEach((d) => {
+            const targetNoteRect = this._noteRects[d.index];
+            if (!targetNoteRect.shiftable) return;
+            // targetNoteRect.y = (targetNoteRect.trackId + trackIdDelta) * this._state.trackHeight;
+            this._model.setNoteById(targetNoteRect.id, NOTE_PROP_TRACK, targetNoteRect.trackId + trackIdDelta);
+          });
+        }
       }
     }
+
     const onDragEnd = (e) => {
       if (!moveStartX) return;
       e.preventDefault(); // for smooth move

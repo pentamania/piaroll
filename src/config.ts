@@ -1,6 +1,7 @@
 // general const
 const DEFAULT_RESOLUTION = 1920;
 export const TRACK_DEFAULT_HEIGHT = 60;
+export const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
 // app const
 export interface AppParam {
@@ -44,8 +45,8 @@ export const NOTE_RECT_INPUT_ELEMENT_HEIGHT = 16;
 export const NOTE_RECT_INPUT_ELEMENT_LEFT = 4;
 
 // chart/track const
-export const SELECTION_MIN_THRESHOLD = 5;
-export const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+export const SELECTION_MIN_THRESHOLD = 4;
+export const NOTE_DRAGGING_THRESHOLD = 2;
 export const TRACK_PROP_RESOLUTION = 'resolution';
 export const TRACK_PROP_BAR_NUM = 'barNum';
 export const TRACK_PROP_BAR_WIDTH = 'barWidth';
