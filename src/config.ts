@@ -135,11 +135,12 @@ export const CSS_CLASS_TRACK_HEADER = `${CSS_NS}-TrackHeader`;
 export const CSS_CLASS_TRACK_HEADER_LABEL = `${CSS_NS}-TrackHeader_Label`;
 export const CSS_CLASS_TRACK_HEADER_BUTTON = `${CSS_NS}-TrackHeader_Button`;
 
-// events
+// event symbols
 export const EVENT_POINT_START_CHART = 'onpointchart';
 export const EVENT_ADD_NOTE = 'addnote';
 export const EVENT_EDIT_NOTE = 'editnote';
 export const EVENT_REMOVE_NOTE = 'removenote';
+export const EVENT_SELECT_NOTE = 'selectnote';
 export const EVENT_FAIL_NOTE_REMOVE = 'failnoteremoval';
 export const EVENT_CHANGE_CURRENT = 'changecurrenttick';
 export const _EVENT_NOTERECT_REMOVED = 'removed';

@@ -1,4 +1,4 @@
-import { CSS_CLASS_NOTE_RECT, CSS_CLASS_TRACK_BRUSH_RECT, CSS_CLASS_TRACK_CHART, CSS_CLASS_TRACK_CURRENT_LINE, EVENT_FAIL_NOTE_REMOVE, EVENT_POINT_START_CHART, iNoteParam, MARKER_COLOR, NOTE_ID_KEY, NOTE_PROP_LABEL, NOTE_PROP_REMOVABLE, NOTE_PROP_SHIFTABLE, NOTE_PROP_TRACK, SVG_NAMESPACE, TRACK_DEFAULT_STATE as defaultState, _EVENT_NOTERECT_REMOVED, NOTE_PROP_SELECTED, MARKER_LINE_DEFAULT_WIDTH, NOTE_PROP_DURATION, NOTE_PROP_START_TICK, TRACK_PROP_BAR_NUM, TRACK_PROP_BAR_WIDTH, TRACK_PROP_HEIGHT, TRACK_PROP_CURRENT, TRACK_PROP_DIV_NUM, TRACK_PROP_RESOLUTION, TrackState, SELECTION_MIN_THRESHOLD, NOTE_DEFAULT_WIDTH } from "../config";
+import { CSS_CLASS_NOTE_RECT, CSS_CLASS_TRACK_BRUSH_RECT, CSS_CLASS_TRACK_CHART, CSS_CLASS_TRACK_CURRENT_LINE, EVENT_FAIL_NOTE_REMOVE, EVENT_POINT_START_CHART, iNoteParam, MARKER_COLOR, NOTE_ID_KEY, NOTE_PROP_LABEL, NOTE_PROP_REMOVABLE, NOTE_PROP_SHIFTABLE, NOTE_PROP_TRACK, SVG_NAMESPACE, TRACK_DEFAULT_STATE as defaultState, _EVENT_NOTERECT_REMOVED, NOTE_PROP_SELECTED, MARKER_LINE_DEFAULT_WIDTH, NOTE_PROP_DURATION, NOTE_PROP_START_TICK, TRACK_PROP_BAR_NUM, TRACK_PROP_BAR_WIDTH, TRACK_PROP_HEIGHT, TRACK_PROP_CURRENT, TRACK_PROP_DIV_NUM, TRACK_PROP_RESOLUTION, TrackState, SELECTION_MIN_THRESHOLD, NOTE_DEFAULT_WIDTH, EVENT_SELECT_NOTE } from "../config";
 import { setTrackBackground } from "../drawBackground";
 import { KeyState as globalKeyState } from "../KeyState";
 import { TrackModel } from "../TrackModel";
@@ -392,9 +392,11 @@ export class TrackChart extends AbstractChart {
           nRect.tempStartX = nRect.x;
           nRect.tempStartY = nRect.y;
         }
-      })
+      });
 
-      // TODO: fire press event
+      // fire select event
+      // TODO: clone object?
+      this._model.emit(EVENT_SELECT_NOTE, noteRect);
     }
     const onDragMove = (e) => {
       if (!moveStartX) return;
@@ -403,6 +405,7 @@ export class TrackChart extends AbstractChart {
 
       /* x-axis move */
       const pointerDeltaX = e.clientX - moveStartX;
+      // if (Math.abs(pointerDeltaX) < 3) return;
       const xMovingRects = [];
       const noteExceedingRangeXExists = this._noteRects.some((nRect, i) => {
         if (nRect.selected && nRect.tempStartX != null) {
