@@ -143,7 +143,7 @@ export const EVENT_EDIT_NOTE = 'editnote';
 export const EVENT_REMOVE_NOTE = 'removenote';
 export const EVENT_SELECT_NOTE = 'selectnote';
 export const EVENT_FAIL_NOTE_REMOVE = 'failnoteremoval';
-export const EVENT_CHANGE_CURRENT = 'changecurrenttick';
+// export const EVENT_CHANGE_CURRENT = 'changecurrenttick';
 export const _EVENT_NOTERECT_REMOVED = 'removed';
 
 // other

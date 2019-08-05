@@ -50,7 +50,7 @@ export class App extends EventEmitter {
     this._trackModels.forEach((tm) => {
       tm.currentTick = v;
     });
-    this.emit(EVENT_CHANGE_CURRENT, v);
+    // this.emit(EVENT_CHANGE_CURRENT, v);
   }
 
   constructor(params: AppParam) {
@@ -118,6 +118,8 @@ export class App extends EventEmitter {
   }
 
   /**
+   * Create model, header, and chart with scale to app.
+   * It can control current tick
    * @method addScaleTrack
    * @param data
    * @returns {TrackModel}
@@ -134,7 +136,7 @@ export class App extends EventEmitter {
     // chart
     var chart = new ScaleTrackChart(this).append(this.chartInner);
     chart.render(dataClone);
-    // chart.model = scaleTrackModel;
+    chart.model = scaleTrackModel;
 
     scaleTrackModel.subscribe(function () {
       headerGroup.render(scaleTrackModel.getData());

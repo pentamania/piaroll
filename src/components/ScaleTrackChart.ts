@@ -13,11 +13,13 @@ import {
   SCALE_TRACK_DEFAULT_BACKGROUND_COLOR,
   MARKER_PATH_POINTS,
   MARKER_HEIGHT,
+  EVENT_POINT_START_CHART,
  } from "../config";
 import { shallowDiff } from "../utils";
 import { SvgText } from "./SvgText";
 import { AbstractChart } from "./abstracts/AbstractChart";
 import { App } from "../App";
+import { TrackModel } from "../TrackModel";
 
 /**
  * @class ScaleChart
@@ -29,6 +31,10 @@ export class ScaleTrackChart extends AbstractChart {
   private _state = { tracks: []}
   private _markerSvg: SVGPolygonElement
   private _app: App
+  private _model: TrackModel
+  set model(v: TrackModel) {
+    this._model = v;
+  }
 
   constructor(app) {
     super();
@@ -51,10 +57,15 @@ export class ScaleTrackChart extends AbstractChart {
     chartSvg.appendChild(marker);
 
     // user event
-    chartSvg.addEventListener('click', (e)=> {
+    chartSvg.addEventListener('mousedown', (e)=> {
       const chartRect = chartSvg.getBoundingClientRect();
-      const x = e.clientX - chartRect.left;
-      this._app.currentTick = this.xToTick(x)
+      const $x = e.clientX - chartRect.left;
+      const $tick = this.xToTick($x);
+      this._app.currentTick = $tick; // update all chart
+      this._model.emit(EVENT_POINT_START_CHART, {
+        x: $x,
+        tick: $tick
+      })
     });
   }
 
