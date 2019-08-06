@@ -138,6 +138,7 @@ export const CSS_CLASS_TRACK_HEADER_BUTTON = `${CSS_NS}-TrackHeader_Button`;
 
 // event symbols
 export const EVENT_POINT_START_CHART = 'pointchart';
+export const EVENT_POINT_DRAG_CHART = 'dragchart';
 export const EVENT_ADD_NOTE = 'addnote';
 export const EVENT_EDIT_NOTE = 'editnote';
 export const EVENT_REMOVE_NOTE = 'removenote';

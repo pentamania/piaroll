@@ -14,6 +14,7 @@ import {
   MARKER_PATH_POINTS,
   MARKER_HEIGHT,
   EVENT_POINT_START_CHART,
+  EVENT_POINT_DRAG_CHART,
  } from "../config";
 import { shallowDiff } from "../utils";
 import { SvgText } from "./SvgText";
@@ -56,17 +57,42 @@ export class ScaleTrackChart extends AbstractChart {
     marker.setAttribute('class', `${CSS_CLASS_SCALE_TRACK_MARKER}`);
     chartSvg.appendChild(marker);
 
-    // user event
+    /**
+     * set up user event
+     */
+    let isPointing = false;
+    let chartRect: DOMRect | ClientRect;
     chartSvg.addEventListener('mousedown', (e)=> {
-      const chartRect = chartSvg.getBoundingClientRect();
+      e.preventDefault();
+      chartRect = chartSvg.getBoundingClientRect();
       const $x = e.clientX - chartRect.left;
       const $tick = this.xToTick($x);
       this._app.currentTick = $tick; // update all chart
       this._model.emit(EVENT_POINT_START_CHART, {
         x: $x,
         tick: $tick
-      })
+      });
+      isPointing = true;
     });
+    chartSvg.addEventListener('mousemove', (e) => {
+      if (!isPointing) return;
+      e.preventDefault();
+      const $x = e.clientX - chartRect.left;
+      const $tick = this.xToTick($x);
+      this._app.currentTick = $tick;
+      this._model.emit(EVENT_POINT_DRAG_CHART, {
+        x: $x,
+        tick: $tick
+      });
+    });
+    document.addEventListener('mouseup', (e) => {
+      chartRect = null;
+      isPointing = false;
+    });
+    // chartSvg.addEventListener('mouseout', (e) => {
+    //   chartRect = null;
+    //   isPointing = false;
+    // });
   }
 
   /**
