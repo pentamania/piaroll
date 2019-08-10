@@ -58,7 +58,7 @@ export class AbstractSvgComponent extends EventEmitter {
     }
   }
 
-  append(parent) {
+  appendTo(parent) {
     parent.appendChild(this.element);
     return this;
   }

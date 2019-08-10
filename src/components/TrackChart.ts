@@ -89,7 +89,7 @@ export class TrackChart extends AbstractChart {
   private _setupBrushSelection() {
     const chartSvg = this._chartSvg;
     const brush = new BrushRect();
-    brush.append(this._svgLineLayer);
+    brush.appendTo(this._svgLineLayer);
     let startX = 0;
     let startY = 0;
     let isDragging = false;
@@ -355,6 +355,9 @@ export class TrackChart extends AbstractChart {
       `${CSS_CLASS_NOTE_RECT}`,
       `${CSS_CLASS_NOTE_RECT}-${noteRect.id}`
     ];
+    if (noteParam.image != null) {
+      noteRect.image = noteParam.image;
+    }
 
     /**
      * set note dragging feature
@@ -477,7 +480,7 @@ export class TrackChart extends AbstractChart {
       })
       moveStartX = 0; // reset
     }
-    noteRect.addEventListener('mousedown', onDragStart);
+    noteRect.addEventListener('mousedown', onDragStart, true);
     document.addEventListener('mousemove', onDragMove);
     document.addEventListener('mouseup', onDragEnd);
 

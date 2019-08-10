@@ -117,7 +117,7 @@ export class ScaleTrackChart extends AbstractChart {
       numLabel.fontSize = state.trackHeight * 0.6;
       numLabel.x = i * state.barWidth;
       numLabel.text = String(i);
-      numLabel.append(this._chartSvg);
+      numLabel.appendTo(this._chartSvg);
       numLabel.classList = [
         CSS_CLASS_SCALE_TRACK_NUMLABEL,
         `${CSS_CLASS_SCALE_TRACK_NUMLABEL} ${CSS_CLASS_SCALE_TRACK_NUMLABEL}-${i}`,

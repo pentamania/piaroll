@@ -1,8 +1,10 @@
-import {SVG_NAMESPACE, CSS_CLASS_NOTE_RECT_EXTENSION_RECT, CSS_CLASS_NOTE_RECT_INPUT_LABEL, _EVENT_NOTERECT_REMOVED, NOTE_RECT_ACTIVE_STROKE_STYLE, NOTE_RECT_INPUT_ELEMENT_HEIGHT, EXTENSION_RECT_WIDTH, NOTE_RECT_INPUT_ELEMENT_WIDTH, NOTE_RECT_DEFAULT_FILL, NOTE_RECT_STROKE_WIDTH, EXTENSTION_RECT_FILL, EVENT_REMOVE_NOTE, NOTE_RECT_INPUT_ELEMENT_LEFT} from "../config";
+import {SVG_NAMESPACE, CSS_CLASS_NOTE_RECT_EXTENSION_RECT, CSS_CLASS_NOTE_RECT_INPUT_LABEL, _EVENT_NOTERECT_REMOVED, NOTE_RECT_ACTIVE_STROKE_STYLE, NOTE_RECT_INPUT_ELEMENT_HEIGHT, EXTENSION_RECT_WIDTH, NOTE_RECT_INPUT_ELEMENT_WIDTH, NOTE_RECT_DEFAULT_FILL, NOTE_RECT_STROKE_WIDTH, EXTENSTION_RECT_FILL, EVENT_REMOVE_NOTE, NOTE_RECT_INPUT_ELEMENT_LEFT, CSS_CLASS_NOTE_RECT_IMAGE} from "../config";
 import EventEmitter from 'wolfy87-eventemitter';
+import { SVGImage } from "./SVGImage";
 
 /**
  * @class NoteRect
+ * TODO: refactor getter/setters
  */
 export class NoteRect extends EventEmitter {
 
@@ -133,6 +135,27 @@ export class NoteRect extends EventEmitter {
     }
     this.inputElement.value = String(v);
   }
+
+  /**
+   * image (experimental)
+   */
+  private _imageSVG: SVGImage
+  set image(v: string) {
+    let imageSVG = this._imageSVG;
+    if (!imageSVG) {
+      imageSVG = this._imageSVG = new SVGImage();
+      imageSVG.element.style.pointerEvents = 'none'; // ignore mouse event
+      imageSVG.classList = CSS_CLASS_NOTE_RECT_IMAGE;
+      imageSVG.appendTo(this._containerElement);
+    }
+    imageSVG.setImage(v).then(()=> {
+      // TODO: enable setting different postion?
+      // imageSVG.x = (this._width - imageSVG.width) * 0.5;
+      imageSVG.x = -imageSVG.width * 0.5;
+      imageSVG.y = (this._height - imageSVG.height) * 0.5;
+    });
+  }
+
   set classList(v: string|string[]) {
     if (typeof v === 'string') {
       this._rectElement.setAttribute('class', v);
@@ -155,6 +178,7 @@ export class NoteRect extends EventEmitter {
 
     // container-svg
     this._containerElement = document.createElementNS(SVG_NAMESPACE, "svg");
+    this._containerElement.setAttribute('overflow', 'visible'); // avoid hiding image
 
     // main-rect-svg
     this._rectElement = document.createElementNS(SVG_NAMESPACE, "rect");
@@ -175,14 +199,13 @@ export class NoteRect extends EventEmitter {
     if (removable != null) this._removable = removable;
     if (shiftable != null) this._shiftable = shiftable;
 
-    // remove later?
+    // TODO: remove later?
     this._debugTextElement = document.createElementNS(SVG_NAMESPACE, "text")
     this._debugTextElement.setAttribute('y', "16");
     this._containerElement.appendChild(this._debugTextElement);
-
-    // TODO: 画像を追加できるようにする
   }
 
+  // TODO: name change to appendTo
   append(parent) {
     parent.appendChild(this._containerElement);
   }
