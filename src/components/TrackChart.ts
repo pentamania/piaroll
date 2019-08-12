@@ -397,9 +397,8 @@ export class TrackChart extends AbstractChart {
         }
       });
 
-      // fire select event
-      // TODO: clone object?
-      this._model.emit(EVENT_SELECT_NOTE, noteRect);
+      // emit select event
+      this._model.emit(EVENT_SELECT_NOTE, this._model.getNoteById(noteRect.id));
     }
 
     const onDragMove = (e) => {
