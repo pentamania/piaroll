@@ -62,10 +62,15 @@ export class NoteRect extends EventEmitter {
   set height(v) {
     this._height = v;
     this._rectElement.setAttribute("height", String(v));
-    if (this.extensionElement != null)
+    if (this.extensionElement != null) {
       this.extensionElement.setAttribute('height', String(v));
-    if (this._foreignInputWrapper)
+    }
+    if (this._foreignInputWrapper) {
       this._foreignInputWrapper.setAttribute('y', String((v - NOTE_RECT_INPUT_ELEMENT_HEIGHT)*0.5));
+    }
+    if (this._imageSVG) {
+      this._imageSVG.y = (this._height - this._imageSVG.height) * 0.5;
+    }
   }
   get selected() { return this._selected; }
   set selected(v) {
