@@ -533,7 +533,7 @@ export class TrackChart extends AbstractChart {
     });
 
     // append to parent svg
-    noteRect.append(this._svgNoteLayer);
+    noteRect.appendTo(this._svgNoteLayer);
     this._noteRects.push(noteRect);
   }
 

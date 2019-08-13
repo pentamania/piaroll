@@ -205,8 +205,7 @@ export class NoteRect extends EventEmitter {
     this._containerElement.appendChild(this._debugTextElement);
   }
 
-  // TODO: name change to appendTo
-  append(parent) {
+  appendTo(parent) {
     parent.appendChild(this._containerElement);
   }
 

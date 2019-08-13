@@ -8,9 +8,6 @@ export abstract class AbstractChart extends EventEmitter {
   protected _chartWidth: number = 0
   protected _chartHeight: number = 0
 
-  // constructor() {
-  // }
-
   /**
    * convert methods
    */
@@ -23,7 +20,10 @@ export abstract class AbstractChart extends EventEmitter {
     return x * this._xToTickFactor;
   }
 
-  append(parent) {
+  /**
+   * append to specified element
+   */
+  appendTo(parent: SVGElement | HTMLElement) {
     parent.appendChild(this._chartSvg);
     return this;
   }

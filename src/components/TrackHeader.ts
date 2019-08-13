@@ -74,7 +74,7 @@ class HeaderComponent {
     el.appendChild(la);
   }
 
-  append(parent:HTMLElement) {
+  appendTo(parent: HTMLElement) {
     parent.appendChild(this.element)
   }
 
@@ -119,7 +119,7 @@ export class TrackHeader {
           newHeader.text = diff.value['label'];
           newHeader.height = newState.trackHeight;
           newHeader.id = diff.value[KEY_PROP];
-          newHeader.append(this.container);
+          newHeader.appendTo(this.container);
           this._headers.push(newHeader);
           break;
         case "edit":
@@ -148,11 +148,14 @@ export class TrackHeader {
         });
       }
     });
-
   }
 
-  append(parent) {
+  /**
+   * append to specified element
+   */
+  appendTo(parent: SVGElement | HTMLElement) {
     parent.appendChild(this.container);
     return this;
   }
+
 }

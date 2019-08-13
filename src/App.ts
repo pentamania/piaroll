@@ -130,11 +130,11 @@ export class App extends EventEmitter {
     const dataClone = scaleTrackModel.getData();
 
     // header
-    const headerGroup = new TrackHeader().append(this.headerContainer);
+    const headerGroup = new TrackHeader().appendTo(this.headerContainer);
     headerGroup.render(dataClone);
 
     // chart
-    var chart = new ScaleTrackChart(this).append(this.chartInner);
+    var chart = new ScaleTrackChart(this).appendTo(this.chartInner);
     chart.render(dataClone);
     chart.model = scaleTrackModel;
 
@@ -159,11 +159,11 @@ export class App extends EventEmitter {
     const dataClone = trackModel.getData();
 
     // header
-    const headerGroup = new TrackHeader().append(this.headerContainer);
+    const headerGroup = new TrackHeader().appendTo(this.headerContainer);
     headerGroup.render(dataClone);
 
     // note-chart
-    var chart = new TrackChart(this).append(this.chartInner);
+    var chart = new TrackChart(this).appendTo(this.chartInner);
     chart.render(dataClone);
     chart.model = trackModel;
 
