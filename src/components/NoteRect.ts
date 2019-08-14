@@ -1,7 +1,7 @@
 import {SVG_NAMESPACE, _EVENT_NOTERECT_REMOVED, NOTE_RECT_ACTIVE_STROKE_STYLE, NOTE_RECT_INPUT_ELEMENT_HEIGHT, EXTENSION_RECT_WIDTH, NOTE_RECT_INPUT_ELEMENT_WIDTH, NOTE_RECT_DEFAULT_FILL, NOTE_RECT_STROKE_WIDTH, EXTENSTION_RECT_FILL, EVENT_REMOVE_NOTE, NOTE_RECT_INPUT_ELEMENT_LEFT } from "../config";
 import EventEmitter from 'wolfy87-eventemitter';
 import { SVGImage } from "./SVGImage";
-import { CSS_CLASS_NOTE_RECT_INPUT_LABEL, CSS_CLASS_NOTE_RECT_IMAGE, CSS_CLASS_NOTE_RECT_EXTENSION_RECT } from "../cssSelectors";
+import { CSS_CLASS_NOTE_RECT_INPUT_LABEL, CSS_CLASS_NOTE_RECT_IMAGE, CSS_CLASS_NOTE_RECT_EXTENSION_RECT, CSS_CLASS_NOTE_RECT_SELECTED } from "../cssSelectors";
 
 /**
  * @class NoteRect
@@ -78,9 +78,11 @@ export class NoteRect extends EventEmitter {
     if (v === true) {
       this._selected = true;
       this._rectElement.setAttribute('stroke', this._activeStrokeStyle);
+      this._rectElement.classList.add(CSS_CLASS_NOTE_RECT_SELECTED);
     } else {
       this._selected = false;
       this._rectElement.setAttribute('stroke', null);
+      this._rectElement.classList.remove(CSS_CLASS_NOTE_RECT_SELECTED);
     }
   }
   get removable() { return this._removable && !this._isInputting; }

@@ -19,7 +19,7 @@ export const NOTE_PROP_START_TICK = 'tick';
 export const NOTE_PROP_TRACK = 'trackId';
 export const NOTE_PROP_DURATION = 'duration';
 export const NOTE_PROP_LABEL = 'label';
-export const NOTE_PROP_SELECTED = 'selected'; // FIXME: selectedは無くして内部的にnoteRectを処理
+export const NOTE_PROP_SELECTED = 'selected';
 export const NOTE_PROP_REMOVABLE = 'removable';
 export const NOTE_PROP_SHIFTABLE = 'shiftable';
 export interface iNoteParam {

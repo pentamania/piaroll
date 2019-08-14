@@ -32,7 +32,8 @@ export class TrackChart extends AbstractChart {
     if  (v == false) {
       // clean clipboard adn clear selection
       this._clipBoardNotes.length = 0;
-      this._model.setAllNotes((note) => note.selected = false);
+      this._noteRects.forEach((nRect) => nRect.selected = false);
+      // this._model.setAllNotes((note) => note.selected = false);
     }
     this._isActive = v;
     // console.log('set active', v);
@@ -100,8 +101,9 @@ export class TrackChart extends AbstractChart {
     chartSvg.addEventListener('mousedown', (e) => {
       // e.preventDefault(); // this will bother noteRect input area
 
-      // clear all note selection
-      this._model.setAllNotes((note) => note.selected = false);
+      // clear all note-selection
+      // this._model.setAllNotes((note) => note.selected = false);
+      this._noteRects.forEach((nRect) => nRect.selected = false );
 
       isDragging = true;
       const chartRect = tempChartRect = chartSvg.getBoundingClientRect();
@@ -199,7 +201,8 @@ export class TrackChart extends AbstractChart {
         /* select noteRect within brush range */
         this._noteRects.forEach((nRect) => {
           if (testRectRect(selectionRect, nRect)) {
-            this._model.setNoteById(nRect.id, NOTE_PROP_SELECTED, true);
+            nRect.selected = true;
+            // this._model.setNoteById(nRect.id, NOTE_PROP_SELECTED, true);
           }
         });
       }
@@ -272,7 +275,8 @@ export class TrackChart extends AbstractChart {
         } else if (e.key === 'd') {
           // 選択全解除
           e.preventDefault();
-          this._model.setAllNotes((note) => note.selected = false);
+          // this._model.setAllNotes((note) => note.selected = false);
+          this._noteRects.forEach((nRect) => nRect.selected = false);
         }
       }
 
@@ -374,13 +378,12 @@ export class TrackChart extends AbstractChart {
       if (!noteRect.selected) {
         // shiftキー押しで連続選択できるように
         if (!globalKeyState.shiftKey) {
-          // clear all selection once if shift key is not pressed
-          this._model.setAllNotes((note) => {
-            note.selected = false;
-          });
+          /* clear all selection if shift key is not pressed */
+          // this._model.setAllNotes((note) => note.selected = false);
+          this._noteRects.forEach((nRect) => nRect.selected = false);
         }
-        // ノーツ選択状態にする
-        this._model.setNoteById(noteParam[NOTE_ID_KEY], NOTE_PROP_SELECTED, true);
+        // this._model.setNoteById(noteParam[NOTE_ID_KEY], NOTE_PROP_SELECTED, true);
+        noteRect.selected = true;
       }
 
       moveStartX = e.clientX;
@@ -573,9 +576,9 @@ export class TrackChart extends AbstractChart {
         noteRect.y = changedPropValue * this._state.trackHeight;
         noteRect.trackId = changedPropValue;
         break;
-      case NOTE_PROP_SELECTED:
-        noteRect.selected = changedPropValue;
-        break;
+      // case NOTE_PROP_SELECTED:
+      //   noteRect.selected = changedPropValue;
+      //   break;
     }
   }
 

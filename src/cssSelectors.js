@@ -26,6 +26,7 @@ export const CSS_CLASS_NOTE_RECT = `${CSS_NS}-TrackChart_NoteRect`;
 export const CSS_CLASS_NOTE_RECT_EXTENSION_RECT = `${CSS_NS}-TrackChart_NoteExtensionElement`;
 export const CSS_CLASS_NOTE_RECT_INPUT_LABEL = `${CSS_NS}-TrackChart_NoteInputLabel`;
 export const CSS_CLASS_NOTE_RECT_IMAGE = `${CSS_NS}-TrackChart_NoteRect_Image`;
+export const CSS_CLASS_NOTE_RECT_SELECTED = `selected`;
 
 // module.exports = {
 //   CSS_CLASS_TRACK_HEADER_BUTTON: `${CSS_NS}-TrackHeader_Button`
