@@ -1,6 +1,7 @@
 import { createDiv, shallowDiff, arrayItemSimpleDiff, cloneObj } from "../utils";
-import { HEADER_DEFAULT_STATE as defaultState, CSS_CLASS_TRACK_HEADER, CSS_CLASS_TRACK_HEADER_BUTTON, CSS_CLASS_TRACK_HEADER_LABEL, TRACK_PROP_HEIGHT } from "../config";
+import { HEADER_DEFAULT_STATE as defaultState, TRACK_PROP_HEIGHT } from "../config";
 import { StrOrNum } from "../config";
+import { CSS_CLASS_TRACK_HEADER, CSS_CLASS_TRACK_HEADER_BUTTON, CSS_CLASS_TRACK_HEADER_LABEL } from "../cssSelectors";
 const KEY_PROP = 'key';
 const initialState = {
   tracks: [],

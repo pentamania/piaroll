@@ -2,9 +2,6 @@ import {
   SVG_NAMESPACE,
   TRACK_DEFAULT_STATE as defaultState,
   MARKER_COLOR,
-  CSS_CLASS_SCALE_TRACK_CHART,
-  CSS_CLASS_SCALE_TRACK_NUMLABEL,
-  CSS_CLASS_SCALE_TRACK_MARKER,
   TRACK_PROP_BAR_NUM,
   TRACK_PROP_BAR_WIDTH,
   TRACK_PROP_HEIGHT,
@@ -21,6 +18,7 @@ import { SvgText } from "./SvgText";
 import { AbstractChart } from "./abstracts/AbstractChart";
 import { App } from "../App";
 import { TrackModel } from "../TrackModel";
+import { CSS_CLASS_SCALE_TRACK_CHART, CSS_CLASS_SCALE_TRACK_MARKER, CSS_CLASS_SCALE_TRACK_NUMLABEL } from "../cssSelectors";
 
 /**
  * @class ScaleChart

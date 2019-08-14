@@ -4,7 +4,8 @@ import { ScaleTrackChart } from "./components/ScaleTrackChart";
 import { TrackHeader } from "./components/TrackHeader";
 import { TrackModel } from "./TrackModel";
 import { createDiv } from "./utils";
-import { CSS_CLASS_APP_WRAPPER, CSS_CLASS_APP_TRACK_WRAPPER, CSS_CLASS_APP_SCROLL_BAR, EVENT_ADD_NOTE, EVENT_CHANGE_CURRENT, SCROLL_BAR_SIZE, AppParam } from './config';
+import { EVENT_ADD_NOTE, SCROLL_BAR_SIZE, AppParam } from './config';
+import { CSS_CLASS_APP_WRAPPER, CSS_CLASS_APP_TRACK_WRAPPER, CSS_CLASS_APP_SCROLL_BAR } from './cssSelectors';
 
 /**
  * @class App

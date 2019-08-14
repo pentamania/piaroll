@@ -19,7 +19,7 @@ export const NOTE_PROP_START_TICK = 'tick';
 export const NOTE_PROP_TRACK = 'trackId';
 export const NOTE_PROP_DURATION = 'duration';
 export const NOTE_PROP_LABEL = 'label';
-export const NOTE_PROP_SELECTED = 'selected';
+export const NOTE_PROP_SELECTED = 'selected'; // FIXME: selectedは無くして内部的にnoteRectを処理
 export const NOTE_PROP_REMOVABLE = 'removable';
 export const NOTE_PROP_SHIFTABLE = 'shiftable';
 export interface iNoteParam {
@@ -118,29 +118,6 @@ export const HEADER_DEFAULT_STATE = Object.freeze({
   tracks: []
 });
 export const BRUSH_DEFAULT_FILL = "rgba(255,255,255, 0.4)";
-
-// css classes
-const CSS_NS = "piaroll";
-export const CSS_CLASS_APP_WRAPPER = `${CSS_NS}-App_Wrapper`;
-export const CSS_CLASS_APP_TRACK_WRAPPER = `${CSS_NS}-App_TrackWrapper`;
-export const CSS_CLASS_APP_SCROLL_BAR = `${CSS_NS}-ScrollBarContainer`;
-
-export const CSS_CLASS_SCALE_TRACK_CHART = `${CSS_NS}-ScaleTrackChart`;
-export const CSS_CLASS_SCALE_TRACK_MARKER = `${CSS_NS}-ScaleTrackChart_TimeMarker`;
-export const CSS_CLASS_SCALE_TRACK_NUMLABEL = `${CSS_NS}-ScaleTrackChart_NumberLabel`;
-
-export const CSS_CLASS_TRACK_CHART = `${CSS_NS}-TrackChart`;
-export const CSS_CLASS_TRACK_CURRENT_LINE = `${CSS_NS}-TrackChart_TimeMarkerLine`;
-export const CSS_CLASS_TRACK_BRUSH_RECT = `${CSS_NS}-TrackChart_BrushRect`;
-
-export const CSS_CLASS_NOTE_RECT = `${CSS_NS}-TrackChart_NoteRect`;
-export const CSS_CLASS_NOTE_RECT_EXTENSION_RECT = `${CSS_NS}-TrackChart_NoteExtensionElement`;
-export const CSS_CLASS_NOTE_RECT_INPUT_LABEL = `${CSS_NS}-TrackChart_NoteInputLabel`;
-export const CSS_CLASS_NOTE_RECT_IMAGE = `${CSS_NS}-TrackChart_NoteRect_Image`;
-
-export const CSS_CLASS_TRACK_HEADER = `${CSS_NS}-TrackHeader`;
-export const CSS_CLASS_TRACK_HEADER_LABEL = `${CSS_NS}-TrackHeader_Label`;
-export const CSS_CLASS_TRACK_HEADER_BUTTON = `${CSS_NS}-TrackHeader_Button`;
 
 // event symbols
 export const EVENT_POINT_START_CHART = 'pointchart';
