@@ -1,12 +1,14 @@
 // general const
-const DEFAULT_RESOLUTION = 1920;
+export const DEFAULT_RESOLUTION = 1920;
 export const TRACK_DEFAULT_HEIGHT = 60;
 export const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
 // app const
 export interface AppParam {
   root: string
+  resolution: number
   width: number
+  barWidth: number
   headerWidth: number
   trackHeight: number
   hideHorizontalScrollBar: boolean
@@ -88,6 +90,8 @@ export interface TrackState {
 
 // app style
 export const SCROLL_BAR_SIZE = 17;
+export const CURSOR_LINE_WIDTH = 2;
+export const CURSOR_LINE_COLOR = "rgb(255, 50, 5)";
 
 // track background style
 export interface TrackBackgroundParams {
@@ -104,10 +108,11 @@ export const TRACK_MINOR_LINE_WIDTH = 1;
 export const TRACK_MAJOR_LINE_COLOR = "#000";
 export const TRACK_MINOR_LINE_COLOR = "#91A46A";
 export const TRACK_DEFAULT_DIV_NUM = 4;
-export const TRACK_DEFAULT_WIDTH = 120;
+export const TRACK_DEFAULT_BAR_WIDTH = 120;
 export const SCALE_TRACK_DEFAULT_BACKGROUND_COLOR = "#645F8B";
 
 // marker style
+// TODO: remove?
 const MARKER_RAD = 9;
 export const MARKER_HEIGHT = 7;
 export const MARKER_COLOR = "rgb(255, 50, 5)";

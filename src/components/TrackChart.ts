@@ -14,7 +14,7 @@ import { CSS_CLASS_TRACK_CHART, CSS_CLASS_TRACK_CURRENT_LINE, CSS_CLASS_TRACK_BR
 export class TrackChart extends AbstractChart {
   private _svgNoteLayer: SVGGElement
   private _svgLineLayer: SVGGElement
-  private _currentLineRect: SVGRectElement
+  // private _currentLineRect: SVGRectElement
 
   private _divSnapUnit: number
   private _state: TrackState = { notes:[], tracks:[] }
@@ -63,12 +63,12 @@ export class TrackChart extends AbstractChart {
     this._svgLineLayer = document.createElementNS(SVG_NAMESPACE, "g");
     chartSvg.appendChild(this._svgLineLayer);
 
-    // current line
-    var line = this._currentLineRect = document.createElementNS(SVG_NAMESPACE, "rect");
-    line.setAttribute('width', String(MARKER_LINE_DEFAULT_WIDTH));
-    line.setAttribute('fill', MARKER_COLOR);
-    chartSvg.setAttribute('class', `${CSS_CLASS_TRACK_CURRENT_LINE}`);
-    this._svgLineLayer.appendChild(line);
+    // // current line
+    // var line = this._currentLineRect = document.createElementNS(SVG_NAMESPACE, "rect");
+    // line.setAttribute('width', String(MARKER_LINE_DEFAULT_WIDTH));
+    // line.setAttribute('fill', MARKER_COLOR);
+    // chartSvg.setAttribute('class', `${CSS_CLASS_TRACK_CURRENT_LINE}`);
+    // this._svgLineLayer.appendChild(line);
 
     // activation event
     chartSvg.addEventListener('mousedown', ()=> {
@@ -675,7 +675,8 @@ export class TrackChart extends AbstractChart {
       this._chartHeight = newState.trackHeight * newState.tracks.length;
       const chartHeightStr = String(this._chartHeight);
       chartSvg.setAttribute('height', chartHeightStr);
-      this._currentLineRect.setAttribute('height', chartHeightStr);
+      // this._currentLineRect.setAttribute('height', chartHeightStr);
+      this._app.updateHeight();
     }
     if (bgRedrawFlag) {
       setTrackBackground(chartSvg, {
@@ -686,8 +687,8 @@ export class TrackChart extends AbstractChart {
     }
     if (currentTickUpdateFlag) {
       // set x to where the rect is centerized
-      const x = this.tickToX(newState.currentTick) - Number(this._currentLineRect.getAttribute('width'))*0.5
-      this._currentLineRect.setAttribute('x', String(x));
+      // const x = this.tickToX(newState.currentTick) - Number(this._currentLineRect.getAttribute('width'))*0.5
+      // this._currentLineRect.setAttribute('x', String(x));
     }
     if (noteRectHorizontalUpdateFlag || noteRectVerticalUpdateFlag) {
       this._noteRects.forEach((noteRect) => {

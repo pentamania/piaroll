@@ -28,7 +28,7 @@ export class ScaleTrackChart extends AbstractChart {
 
   private _measureTexts: SvgText[] = []
   private _state = { tracks: []}
-  private _markerSvg: SVGPolygonElement
+  // private _markerSvg: SVGPolygonElement
   private _app: App
   private _model: TrackModel
   set model(v: TrackModel) {
@@ -48,12 +48,12 @@ export class ScaleTrackChart extends AbstractChart {
     chartSvg.style.cursor = 'pointer';
     chartSvg.setAttribute('class', `${CSS_CLASS_SCALE_TRACK_CHART}`);
 
-    // marker
-    const marker = this._markerSvg = document.createElementNS(SVG_NAMESPACE, "polygon");
-    marker.setAttribute('points', MARKER_PATH_POINTS);
-    marker.setAttribute('fill', MARKER_COLOR);
-    marker.setAttribute('class', `${CSS_CLASS_SCALE_TRACK_MARKER}`);
-    chartSvg.appendChild(marker);
+    // // marker
+    // const marker = this._markerSvg = document.createElementNS(SVG_NAMESPACE, "polygon");
+    // marker.setAttribute('points', MARKER_PATH_POINTS);
+    // marker.setAttribute('fill', MARKER_COLOR);
+    // marker.setAttribute('class', `${CSS_CLASS_SCALE_TRACK_MARKER}`);
+    // chartSvg.appendChild(marker);
 
     /**
      * set up user event
@@ -166,9 +166,9 @@ export class ScaleTrackChart extends AbstractChart {
       this._chartHeight = newState.trackHeight;
       chartSvg.setAttribute('height', String(this._chartHeight));
     }
-    if (currentTickUpdateFlag) {
-      this._markerSvg.style.transform = `translate(${this.tickToX(newState.currentTick)}px, ${this._chartHeight - MARKER_HEIGHT}px)`;
-    }
+    // if (currentTickUpdateFlag) {
+    //   this._markerSvg.style.transform = `translate(${this.tickToX(newState.currentTick)}px, ${this._chartHeight - MARKER_HEIGHT}px)`;
+    // }
     if (measureTextUpdateFlag) {
       this.setMeasures(newState);
     }

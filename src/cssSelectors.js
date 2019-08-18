@@ -5,6 +5,7 @@ const CSS_NS = "piaroll";
 export const CSS_CLASS_APP_WRAPPER = `${CSS_NS}-App_Wrapper`;
 export const CSS_CLASS_APP_TRACK_WRAPPER = `${CSS_NS}-App_TrackWrapper`;
 export const CSS_CLASS_APP_SCROLL_BAR = `${CSS_NS}-ScrollBarContainer`;
+export const CSS_CLASS_CURSOR_LINE = `${CSS_NS}-CursorLine`;
 
 // Track header
 export const CSS_CLASS_TRACK_HEADER = `${CSS_NS}-TrackHeader`;
