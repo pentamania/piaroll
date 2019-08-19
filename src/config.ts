@@ -4,6 +4,7 @@ export const TRACK_DEFAULT_HEIGHT = 60;
 export const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
 // app const
+// TODO: use prop-const-symbols to define key
 export interface AppParam {
   root: string
   resolution: number
@@ -24,6 +25,7 @@ export const NOTE_PROP_LABEL = 'label';
 export const NOTE_PROP_SELECTED = 'selected';
 export const NOTE_PROP_REMOVABLE = 'removable';
 export const NOTE_PROP_SHIFTABLE = 'shiftable';
+// TODO: use prop-const-symbols to define key
 export interface iNoteParam {
   tick: number // change later?
   trackId?: number
@@ -31,11 +33,12 @@ export interface iNoteParam {
   fill?: string
   label?: string
   image?: string
-  selected?: boolean
+  selected?: boolean // TODO: remove?
   extendable?: boolean|string
   removable?: boolean
   shiftable?: boolean
 }
+
 // note-rect style
 export const NOTE_DEFAULT_WIDTH = 16;
 export const NOTE_RECT_DEFAULT_FILL = "#FE7A8E";
@@ -50,6 +53,17 @@ export const NOTE_RECT_INPUT_ELEMENT_LEFT = 4;
 // chart/track const
 export const SELECTION_MIN_THRESHOLD = 4;
 export const NOTE_DRAGGING_THRESHOLD = 2;
+
+// Track header props
+export const TRACK_HEADER_PROP_KEY = 'key';
+export const TRACK_HEADER_PROP_LABEL = 'label';
+export interface TrackHeaderParam {
+  [TRACK_HEADER_PROP_KEY]: string
+  [TRACK_HEADER_PROP_LABEL]: string
+  // muted?: boolean
+}
+
+// Track body props
 export const TRACK_PROP_RESOLUTION = 'resolution';
 export const TRACK_PROP_BAR_NUM = 'barNum';
 export const TRACK_PROP_BAR_WIDTH = 'barWidth';
@@ -68,6 +82,19 @@ export const TRACK_MODEL_PROPERTIES = Object.freeze([
   TRACK_PROP_NOTES,
   TRACK_PROP_TRACKS,
 ]);
+
+export interface TrackHeaderState {
+  [TRACK_PROP_HEIGHT]?: number
+  [TRACK_PROP_TRACKS]?: TrackHeaderParam[]
+}
+// TODO: use prop-const-symbols to define key
+export interface TrackBodyState extends TrackHeaderState {
+  barNum?: number
+  barWidth?: number
+  currentTick?: number
+  notes: iNoteParam[]
+}
+// TODO: use prop-const-symbols to define key
 export const TRACK_DEFAULT_STATE = Object.freeze({
   resolution: DEFAULT_RESOLUTION,
   barNum: 1,
@@ -78,15 +105,6 @@ export const TRACK_DEFAULT_STATE = Object.freeze({
   notes: [],
   tracks: []
 });
-export interface TrackState {
-  barNum?: number
-  barWidth?: number
-  // trackNum?: number
-  trackHeight?: number
-  currentTick?: number
-  notes: iNoteParam[]
-  tracks: []
-}
 
 // app style
 export const SCROLL_BAR_SIZE = 17;

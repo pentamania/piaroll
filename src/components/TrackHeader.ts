@@ -1,9 +1,9 @@
 import { createDiv, shallowDiff, arrayItemSimpleDiff, cloneObj } from "../utils";
-import { HEADER_DEFAULT_STATE as defaultState, TRACK_PROP_HEIGHT } from "../config";
+import { HEADER_DEFAULT_STATE as defaultState, TRACK_PROP_HEIGHT, TRACK_HEADER_PROP_LABEL, TRACK_HEADER_PROP_KEY, TrackHeaderState } from "../config";
 import { StrOrNum } from "../config";
 import { CSS_CLASS_TRACK_HEADER, CSS_CLASS_TRACK_HEADER_BUTTON, CSS_CLASS_TRACK_HEADER_LABEL } from "../cssSelectors";
 import { AbstractElement } from "./abstracts/AbstractElement";
-const KEY_PROP = 'key';
+
 const initialState = {
   tracks: [],
 }
@@ -48,24 +48,25 @@ class HeaderComponent extends AbstractElement {
     el.appendChild(la);
   }
 
-  id: number
+  key: string
   private _muteButton
+  private _labelArea
 
   set height(v: StrOrNum) {
     if (typeof v === 'number') {
       this.element.style.height = v + "px";
       this.element.style.lineHeight = v + "px";
-    } else  {
+    } else {
       this.element.style.height = v;
       this.element.style.lineHeight = v;
     }
   }
 
-  private _labelArea
   set text(v: string) {
     this._labelArea.innerText = v;
   }
 
+  // TODO: remove?
   private _isActive: boolean = true;
   get active() {return this._isActive}
   set active(v: boolean) {
@@ -92,7 +93,7 @@ export class TrackHeader extends AbstractElement {
     this.render(this._state);
   }
 
-  private _state = cloneObj(initialState);
+  private _state: TrackHeaderState = cloneObj(initialState);
   private _headers: HeaderComponent[] = []
 
   // private _clearContainer() {
@@ -101,41 +102,51 @@ export class TrackHeader extends AbstractElement {
   //   }
   // }
 
-  render(newState) {
+  render(newState: TrackHeaderState) {
     newState = Object.assign({}, defaultState, newState);
+    // console.log('header newState', newState);
     const paramDiff = shallowDiff(this._state, newState);
-    const trackDiff = arrayItemSimpleDiff(this._state.tracks, newState.tracks, KEY_PROP)
+    const trackDiff = arrayItemSimpleDiff(this._state.tracks, newState.tracks, TRACK_HEADER_PROP_KEY)
 
     this._state = newState;
 
     trackDiff.forEach( diff => {
-      let targetHeader
-      // TODO: add/edit style setting
       switch (diff.kind) {
         case "new":
           var newHeader = (diff.value['muted'] != null) ? new HeaderComponent() : new HeaderComponent(false);
-          newHeader.text = diff.value['label'];
+          newHeader.text = diff.value[TRACK_HEADER_PROP_LABEL];
           newHeader.height = newState.trackHeight;
-          newHeader.id = diff.value[KEY_PROP];
+          newHeader.key = diff.value[TRACK_HEADER_PROP_KEY];
+
           newHeader.appendTo(this.element);
           this._headers.push(newHeader);
           break;
 
         case "edit":
-          const prop = diff.value[0];
-          const val = diff.value[1];
-          targetHeader = this._headers.find((header) => {
-            return header.id == diff.key;
+          // console.log('header edit', diff);
+          const editedProp = diff.value[0];
+          const newVal = diff.value[1];
+          this._headers.some((header) => {
+            if (header.key === diff.key) {
+              switch (editedProp) {
+                case TRACK_HEADER_PROP_LABEL:
+                  header.text = newVal;
+                  break;
+              }
+              return true;
+            };
           });
-          if (targetHeader) targetHeader[prop] = val;
           break;
 
         case "remove":
-          // FIXME: use Array.some and remove also from this._headers
-          targetHeader = this._headers.find((header) => {
-            return header.id == diff.key;
+          // console.log('header removing', diff);
+          this._headers.some((header, i) => {
+            if (header.key === diff.key) {
+              this._headers.splice(i, 1);
+              header.remove();
+              return true;
+            };
           });
-          if (targetHeader) targetHeader.remove();
           break;
       }
     });
