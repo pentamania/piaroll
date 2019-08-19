@@ -2,10 +2,10 @@ import { SVG_NAMESPACE } from "../config";
 import { AbstractSvgComponent } from "./abstracts/AbstractSvgComponent";
 
 /**
- * @class SvgText
+ * @class SVGText
  * Wrapper class of vanilla svg
  */
-export class SvgText extends AbstractSvgComponent {
+export class SVGText extends AbstractSvgComponent {
 
   constructor() {
     super();

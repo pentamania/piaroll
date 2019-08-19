@@ -14,7 +14,7 @@ import {
   EVENT_POINT_DRAG_CHART,
  } from "../config";
 import { shallowDiff } from "../utils";
-import { SvgText } from "./SvgText";
+import { SVGText } from "./SVGText";
 import { AbstractChart } from "./abstracts/AbstractChart";
 import { App } from "../App";
 import { TrackModel } from "../TrackModel";
@@ -26,7 +26,7 @@ import { CSS_CLASS_SCALE_TRACK_CHART, CSS_CLASS_SCALE_TRACK_MARKER, CSS_CLASS_SC
  */
 export class ScaleTrackChart extends AbstractChart {
 
-  private _measureTexts: SvgText[] = []
+  private _measureTexts: SVGText[] = []
   private _state = { tracks: []}
   // private _markerSvg: SVGPolygonElement
   private _app: App
@@ -109,17 +109,18 @@ export class ScaleTrackChart extends AbstractChart {
         return textElement.parent === null;
       });
       if (!numLabel) {
-        numLabel = new SvgText();
+        numLabel = new SVGText();
         this._measureTexts.push(numLabel);
       }
       numLabel.fontSize = state.trackHeight * 0.6;
       numLabel.x = i * state.barWidth;
       numLabel.text = String(i);
       numLabel.appendTo(this._chartSvg);
-      numLabel.classList = [
+      numLabel.classList.add(
         CSS_CLASS_SCALE_TRACK_NUMLABEL,
-        `${CSS_CLASS_SCALE_TRACK_NUMLABEL} ${CSS_CLASS_SCALE_TRACK_NUMLABEL}-${i}`,
-      ];
+        `${CSS_CLASS_SCALE_TRACK_NUMLABEL}`,
+        `${CSS_CLASS_SCALE_TRACK_NUMLABEL}-${i}`
+      );
     }
   }
 

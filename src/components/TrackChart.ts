@@ -119,7 +119,7 @@ export class TrackChart extends AbstractChart {
       brush.width = 0;
       brush.height = 0;
       brush.visible = true;
-      brush.classList = CSS_CLASS_TRACK_BRUSH_RECT;
+      brush.classList.add(CSS_CLASS_TRACK_BRUSH_RECT);
     });
 
     chartSvg.addEventListener('mousemove', (e) => {

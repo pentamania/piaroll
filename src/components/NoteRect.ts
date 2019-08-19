@@ -153,7 +153,7 @@ export class NoteRect extends EventEmitter {
     if (!imageSVG) {
       imageSVG = this._imageSVG = new SVGImage();
       imageSVG.element.style.pointerEvents = 'none'; // ignore mouse event
-      imageSVG.classList = CSS_CLASS_NOTE_RECT_IMAGE;
+      imageSVG.classList.add(CSS_CLASS_NOTE_RECT_IMAGE);
       imageSVG.appendTo(this._containerElement);
     }
     imageSVG.setImage(v).then(()=> {
