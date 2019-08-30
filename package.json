@@ -1,10 +1,9 @@
 {
-  "name": "piano-roll-js",
-  "libName": "pianoroll",
-  "namespace": "pia",
-  "version": "1.0.0",
+  "name": "piaroll",
+  "lib_namespace": "pia",
+  "version": "0.1.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/piaroll.js",
   "scripts": {
     "start": "rollup -c -w",
     "dev": "rollup -c -w",
@@ -12,7 +11,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "pentamania",
   "license": "MIT",
   "dependencies": {
     "wolfy87-eventemitter": "^5.2.6"

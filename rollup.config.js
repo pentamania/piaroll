@@ -2,7 +2,7 @@ import typescript from 'rollup-plugin-typescript';
 import commonjs from 'rollup-plugin-commonjs';
 import nodeResolve from 'rollup-plugin-node-resolve';
 import { uglify } from 'rollup-plugin-uglify';
-import { libName, namespace } from './package.json';
+import { main as DIST, lib_namespace } from './package.json';
 
 /* plugin options */
 const plugins = [
@@ -20,11 +20,10 @@ const plugins_min = plugins.concat([
 export default [
   // iife ver.
   {
-    // input: './src/entry.ts',
     input: './src/index.ts',
     output: {
-      name: namespace,
-      file: `dist/${libName}.js`,
+      name: lib_namespace,
+      file: DIST,
       sourcemap: true,
       format: 'iife',
     },
